@@ -1,7 +1,7 @@
 ALLMOUSE=TRUE
-KEYBOARD=TRUE
-COPY=TRUE
+KEYBOARD=FALSE
+COPY=FALSE
 FILTER=WHITE
 SCREENCAPTURE=1
-PROCESS=eclipse,javaw,firefox,chrome,iexplore,WINWORD,EXCEL,devenv,explorer,notepad,POWERPNT,FoxitReader,pycharm,Acrobat,WinEdt
+PROCESS=eclipse,javaw,firefox,chrome,iexplore,WINWORD,EXCEL,devenv,notepad,POWERPNT,FoxitReader,pycharm,Acrobat,WinEdt
 UPLOAD=TRUE
