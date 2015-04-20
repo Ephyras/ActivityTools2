@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<link href='../fullcalendar.css' rel='stylesheet' />
+<link href='../fullcalendar.print.css' rel='stylesheet' media='print' />
+<script src='../lib/moment.min.js'></script>
+<script src='../lib/jquery.min.js'></script>
+<script src='../fullcalendar.min.js'></script>
+<script>
+
+	$(document).ready(function() {
+		
+		$('#calendar').fullCalendar({
+			header: {
+				left: 'prev,next today',
+				center: 'title',
+				right: 'month,basicWeek,basicDay'
+			},
+			defaultDate: '2015-03-22',
+			editable: true,
+			eventLimit: true, // allow "more" link when too many events
+			events: [
+				{title: 'InteractionSummaryProcesser.java(ActivityManagment/src/activity/web/manager)', 
+				start: '2015-03-22'}, 
+				{title: 'DBRecord.java(ActivityManagment/src/activity/web/db)', 
+				start: '2015-03-22T12:17:39'}, 
+				{title: 'LLInteraction.java(ActivityManagment/src/activity/web/db/dao)', 
+				start: '2015-03-22T12:18:21'}, 
+				{title: 'DBImpl.java(ActivityManagment/src/cn/zju/edu/blf/db)', 
+				start: '2015-03-22T12:23:15'}, 
+				{title: 'MySqlImpl.java(ActivityManagment/src/activity/web/db)', 
+				start: '2015-03-22T12:39:45'}
+			]
+		});
+		
+	});
+
+</script>
+<style>
+
+	body {
+		margin: 40px 10px;
+		padding: 0;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+		font-size: 14px;
+	}
+
+	#calendar {
+		max-width: 900px;
+		margin: 0 auto;
+	}
+
+</style>
+</head>
+<body>
+
+	<div id='calendar'></div>
+
+</body>
+</html>
