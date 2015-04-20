@@ -21,6 +21,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.log4j.Logger;
+
 import cn.zju.edu.blf.dao.LowLevelInteraction;
 import cn.zju.edu.blf.dao.CResource;
 import cn.zju.edu.blf.dao.GroupedInteraction;
@@ -28,6 +30,8 @@ import cn.zju.edu.blf.dao.GroupDetail;
 import cn.zju.edu.manager.IconManager;
 
 public class DBImpl {
+	Logger logger = Logger.getLogger(DBImpl.class.getName());
+	
 	private static String URL = "jdbc:mysql://155.69.147.247:3306/hci";
 	private static String USER_NAME = "blf";
 	private static String PASSWORD = "123456";
@@ -38,9 +42,21 @@ public class DBImpl {
 	{
 		try
 		{
-			//File f = new File("db.txt");
-			//InputStream is = new FileInputStream(f);
-			BufferedReader br = new BufferedReader(new InputStreamReader(DBImpl.class.getResourceAsStream("/config/db.txt"))); 
+			InputStreamReader reader = null;
+			
+			File f = new File("db.txt");
+			if(f.exists())
+			{
+				logger.info("read from current directory");
+				reader = new InputStreamReader(new FileInputStream(f));
+			}
+			else
+			{
+				reader = new InputStreamReader(DBImpl.class.getResourceAsStream("/config/db.txt")); 
+			}
+			
+			BufferedReader br = new BufferedReader(reader);
+			
 			String line = br.readLine();
 
 	        while (line != null) {
@@ -48,6 +64,15 @@ public class DBImpl {
 	        	if("HOST".equals(params[0]))
 	        	{
 	        		URL = params[1];
+	        		int index = URL.indexOf("://");
+	        		if( index < 0)
+	        		{
+	        			throw new Exception("url is invlid: " + URL);
+	        		}
+	        		else 
+	        		{
+	        			URL = "jdbc:mysql" + URL.substring(index);
+	        		}
 	        	}
 	        	else if("USER".equals(params[0]))
 	        	{
@@ -62,7 +87,7 @@ public class DBImpl {
 	        }
 		}catch(Exception e)
 		{
-			System.out.println("read db config error: " + e.getMessage());
+			logger.info("read db config error: ", e);
 		}
 	}
 	

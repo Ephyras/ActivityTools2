@@ -113,11 +113,6 @@ public class HistoryActivityManager {
 			String from = g.getDetails().get(0).getTime();
 			String to = g.getDetails().get(g.getDetails().size()-1).getTime();
 			
-			if(g.getTitle().contains("jsTree"))
-			{
-				System.out.println(g.getTitle());
-			}
-			
 			int k = aggrGroups.indexOf(g);
 			if(k >= 0)
 			{
