@@ -584,7 +584,7 @@ LRESULT CALLBACK LLMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 			
 			CloseHandle(thread);
 			
-			if(isNeedScreenCaptured(windowName, strTime))
+			if(processName != "explorer.exe" && isNeedScreenCaptured(windowName, strTime))
 			{
 				std::string img = "log/screen/" + strTime +  ".png";
 				GetScreeny(SCREEN_RECT,from_string(img).c_str(),100);
