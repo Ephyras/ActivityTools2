@@ -53,6 +53,7 @@ public:
 
 	void run();
 	void upload();
+	void removeScreenshots();
 	vector<ResultEntity> getLastRecords();
 private:
 	string user;

@@ -1,4 +1,6 @@
 #include"upload.h"
+#include<Windows.h>
+#include<io.h>
 
 #pragma comment (lib,"Psapi.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -136,7 +138,7 @@ void MySqlImpl::upload(vector<ResultEntity>& rs, string user, string logDir)
 
 			is.close();
 
-			std::remove(imgPath.c_str());
+			//std::remove(imgPath.c_str());
 		}
 
 		delete prep_stmt;
@@ -161,7 +163,7 @@ void MySqlImpl::init(string url, string username, string password)
 		conn->setSchema("hci");
 
 		bool reconnect = true;
-		conn->setClientOption("OPT_RECONNECT", &reconnect);
+		conn->setClientOption("MYSQL_OPT_RECONNECT", &reconnect);
 
 		sucess = !conn->isClosed();
 	}
@@ -186,6 +188,8 @@ LogUploader::LogUploader(string logDir, string user)
 {
 	this->logDir = logDir;
 	this->user = user;
+
+	lastTime = "";
 
 	int rc = sqlite3_open_v2((logDir+"/log.db3").c_str(), &db, SQLITE_OPEN_READONLY, NULL);
 	if(rc>0)
@@ -302,16 +306,53 @@ void LogUploader::upload()
 	}
 }
 
+void LogUploader::removeScreenshots()
+{
+	while(true)
+	{
+		Sleep(60 * 1000);
+
+		if(lastTime == "") continue;
+
+		string imgPattern = logDir + "/screen/*.png";
+		string lastTime2 = dbTime2ImgTime(lastTime);
+
+		_finddata_t fileInfo;
+		long lfDir;
+		if((lfDir=_findfirst(imgPattern.c_str(),&fileInfo)) == -1)
+		{
+			cout<<"folder not found"<<endl;
+		}
+		else
+		{
+			do{
+				string fileName(fileInfo.name);
+				if(fileName.compare(lastTime2) < 0)
+				{
+
+					string path = logDir + "/screen/" + fileName;
+					int res = remove(path.c_str());
+					
+					cout<<"try to remove screenshot: " <<path<< " # result: "<<res<<endl;
+					
+				}				
+			}while( _findnext( lfDir, &fileInfo ) == 0 );
+		}
+	}
+}
+
 void LogUploader::run()
 {
 	thread t(&LogUploader::upload, this);
+	thread t2(&LogUploader::removeScreenshots, this);
 
 	t.join();
+	t2.join();
 }
 
 int main()
 {
 	LogUploader uploader("log", getUserName());
 
-	uploader.upload();
+	uploader.run();
 }
