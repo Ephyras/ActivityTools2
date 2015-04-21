@@ -227,3 +227,4 @@ hs_err_pid*
 tools/log.log
 tools/log/*
 RemoteSystemsTempFiles
+ActivityDisplayer/*
