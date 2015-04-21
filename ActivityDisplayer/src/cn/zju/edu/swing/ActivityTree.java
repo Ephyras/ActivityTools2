@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Icon;
@@ -23,6 +24,7 @@ import cn.zju.edu.blf.dao.ActivityObject;
 import cn.zju.edu.manager.FilterManager;
 import cn.zju.edu.manager.HistoryActivityManager;
 import cn.zju.edu.manager.IconManager;
+import cn.zju.edu.util.DateUtil;
 import cn.zju.edu.util.InteractionUtil;
 
 public class ActivityTree extends JTree implements ActionListener{
@@ -35,8 +37,19 @@ public class ActivityTree extends JTree implements ActionListener{
 	
 	protected DefaultTreeModel treeModel;
 	
-	public ActivityTree()
+	private int parentId;
+	public int getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(int parentId) {
+		this.parentId = parentId;
+	}
+
+	public ActivityTree(int parentId)
 	{
+		this.parentId = parentId;
+		
 		rootNode = new DefaultMutableTreeNode("Root Node");
 	    treeModel = new DefaultTreeModel(rootNode);
 	    
@@ -70,6 +83,7 @@ public class ActivityTree extends JTree implements ActionListener{
 		node5.removeAllChildren();
 		
 		//List<ActivityObject> list = manager.getOrderedMap();
+		Collections.sort(list);
 		
 		for(int i=0; i<list.size(); i++)
 		{
@@ -186,7 +200,37 @@ public class ActivityTree extends JTree implements ActionListener{
 	            	this.setText(a.getTitle());
 	            	if(HistoryActivityManager.getInstance().hasGroup(a.getTitle(), a.getApplication()))
 	            	{
-	            		this.setForeground(Color.BLUE);
+	            		
+	            		if(tree instanceof ActivityTree)
+	            		{
+	            			ActivityTree atree = (ActivityTree)tree;
+	            			if(atree.getParentId() == 2)
+	            			{
+	            				//Color c = new Color(255,255,0);
+			            		int day = DateUtil.getIntervalDayUtilNow(a.getLastTime());
+			            		
+			            		double sig = 1.0 / (1 + Math.exp(0.6 * (day-1)));
+			            		
+			            		int b = (int)(175 * sig + 135);
+			            		b = b>255 ? 255:b;
+			            		
+			            		int r = 255-b;
+			            		
+			            		System.out.println(day + "/" + b + "/" + r);
+			            		
+			            		this.setForeground(new Color(r, r, b));
+	            			}
+	            			else
+	            			{
+	            				this.setForeground(Color.BLUE);
+	            			}
+	            		}
+	            		else
+	            		{
+	            			this.setForeground(Color.BLUE);
+	            		}
+	            		
+	            		
 	            	}
             	}catch(Exception e)
             	{

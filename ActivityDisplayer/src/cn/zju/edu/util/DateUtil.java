@@ -36,7 +36,62 @@ public class DateUtil {
 	{
 		return calcInterval(t1, t2, "yyyy-MM-dd HH:mm:ss.SSS");
 	}
-
+	
+	public static int getIntervalMinuteUtilNow(String t)
+	{
+		String now = fromDate(new Date(), "yyyy-MM-dd HH:mm:ss.SSS");
+		
+		return getIntervalMinute(t, now);
+	}
+	
+	public static int getIntervalMinute(String t1, String t2)
+	{
+		try
+		{
+			double second = calcInterval(t1, t2);
+			
+			if(second<0)
+			{
+				return 0;
+			}
+			
+			return (int)(second / 60);
+			
+		}
+		catch(Exception e)
+		{
+			return 0;
+		}
+	}
+	
+	public static int getIntervalDayUtilNow(String t)
+	{
+		String now = fromDate(new Date(), "yyyy-MM-dd HH:mm:ss.SSS");
+		
+		return getIntervalDay(t, now);
+	}
+	
+	public static int getIntervalDay(String t1, String t2)
+	{
+		try
+		{
+			double second = calcInterval(t1, t2);
+			
+			if(second<0)
+			{
+				return 0;
+			}
+			
+			return (int)(second / 3600 / 24);
+			
+		}
+		catch(Exception e)
+		{
+			return 0;
+		}
+		
+	}
+	
 	public static double compareNow(String t) throws Exception
 	{
 		Date now = new Date();

@@ -45,7 +45,7 @@ public class CoActivityPane extends JPanel  {
 	public CoActivityPane() {
 		setLayout(new BorderLayout(0, 0));
 		 
-		tree = new ActivityTree();
+		tree = new ActivityTree(2);
 		JScrollPane scrollPane = new JScrollPane(tree);
 		add(scrollPane, BorderLayout.CENTER);
 		

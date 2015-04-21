@@ -25,6 +25,7 @@ public class IconManager {
 		ICONS_MAP.put("Baidu", createImageIcon("/icons/baidu.png"));
 		ICONS_MAP.put("Google", createImageIcon("/icons/google.png"));
 		ICONS_MAP.put("Star", createImageIcon("/icons/star.png"));
+		ICONS_MAP.put("setting", createImageIcon("/icons/setting.png"));
 		ICONS_MAP.put("default", createImageIcon("/icons/unknown.png"));
 	}
 	

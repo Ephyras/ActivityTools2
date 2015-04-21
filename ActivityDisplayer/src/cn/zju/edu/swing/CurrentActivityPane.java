@@ -52,7 +52,7 @@ public class CurrentActivityPane extends JPanel{
 	{
 	    super(new BorderLayout());
 	    
-	    tree = new ActivityTree();
+	    tree = new ActivityTree(1);
 	    
 	    JScrollPane scrollPane = new JScrollPane(tree);
 	    add(scrollPane, BorderLayout.CENTER);

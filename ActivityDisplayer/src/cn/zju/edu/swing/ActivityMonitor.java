@@ -1,6 +1,7 @@
 package cn.zju.edu.swing;
 
 import java.awt.AWTEvent;
+import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.EventQueue;
 import java.awt.Image;
@@ -40,6 +41,7 @@ import cn.zju.edu.util.InteractionUtil;
 
 import java.awt.GridLayout;
 
+import javax.swing.ImageIcon;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.BoxLayout;
@@ -125,8 +127,14 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 	 */
 	private void initialize() throws Exception
 	{
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		
+		int width = 400;
+		int height = (int)screenSize.getHeight() - 100;
+		int x = (int)screenSize.getWidth() - width;
+		
 		frame = new JFrame("Activity Tracker");
-		frame.setBounds(100, 100, 397, 783);
+		frame.setBounds(x, 5, width, height);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout(0, 0));
 		frame.setResizable(false);
@@ -153,13 +161,16 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 		//topicPane = new TopicPane();
 		//tabbedPane.addTab("Clustered Topic", null, topicPane, null);
 		
-		//toolPanel = new JPanel();
-		//frame.getContentPane().add(toolPanel, BorderLayout.SOUTH);
-		//toolPanel.setLayout(new BoxLayout(toolPanel, BoxLayout.X_AXIS));
+		toolPanel = new JPanel();
+		frame.getContentPane().add(toolPanel, BorderLayout.SOUTH);
+		toolPanel.setLayout(new BorderLayout());
+		JButton btnSetting = new JButton();
+		ImageIcon setIcon = IconManager.getIcon("setting");
+		btnSetting.setPreferredSize(new Dimension(setIcon.getIconWidth()+10,setIcon.getIconHeight()+10 ));
+		btnSetting.setIcon(setIcon);
+		toolPanel.add(btnSetting, BorderLayout.WEST);
 		
 		
-		//btnTimeline = new JButton("Activity History");
-		//toolPanel.add(btnTimeline);
 		/*
 		btnTimeline.addActionListener(new ActionListener()
 		{
@@ -240,7 +251,7 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 	    {
 	    	System.out.println(fe.getSource().getClass().getName());
 	    	tabbedPane.setSelectedIndex(0);
-	    	coPane.setFocusWindow(null, null);
+	    	//coPane.setFocusWindow(null, null);
 	    }
 	}    
 	
@@ -301,8 +312,6 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
         
         String curWindow = Native.toString(buffer);
        
-        //JFrame popup = new JFrame(curWindow);
-        
         PointerByReference pointer = new PointerByReference();
         User32DLL.GetWindowThreadProcessId(User32DLL.GetForegroundWindow(), pointer);
         Pointer process = Kernel32.OpenProcess(Kernel32.PROCESS_QUERY_INFORMATION | Kernel32.PROCESS_VM_READ, false, pointer.getValue());
@@ -310,7 +319,6 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
         String processName = Native.toString(buffer);
         
         if("Activity Tracker".equals(curWindow) && "javaw.exe".equals(processName)) return;
-        //System.out.println("Active window title: " + curWindow + " / " + processName);
         
         tabbedPane.setSelectedIndex(1);
         this.coPane.setFocusWindow(getWindowTitle(curWindow, processName), processName);
