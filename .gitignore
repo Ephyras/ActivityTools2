@@ -224,7 +224,7 @@ pip-log.txt
 hs_err_pid*
 
 !tools/*
-tools/log.log
+tools/*.log
 tools/log/*
 RemoteSystemsTempFiles
 ActivityDisplayer/*
