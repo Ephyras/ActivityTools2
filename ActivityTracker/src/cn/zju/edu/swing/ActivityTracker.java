@@ -8,6 +8,8 @@ import javafx.application.Platform;
 
 import javax.swing.*;
 
+import cn.zju.edu.ActivityConfiguration;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -54,7 +56,7 @@ public class ActivityTracker {
 
 class ApplicationFrame extends JFrame{
 	
-  String DEMO_URL = "http://localhost:8080/ActivityManagment/jsp/index.jsp";
+  String DEMO_URL;
 	
   JFXPanel javafxPanel;
   WebView webComponent;
@@ -69,7 +71,9 @@ class ApplicationFrame extends JFrame{
   public ApplicationFrame(String filter, String app){
 	user = System.getProperty("user.name");
 	
-	DEMO_URL = DEMO_URL + "?user="+user;
+	DEMO_URL = ActivityConfiguration.getInstance().getWEB_APPLICATION() + "/jsp/index.jsp";
+	
+	DEMO_URL += "?user="+user;
 	
 	if(filter != null && !"".equals(filter.trim()))
 	{

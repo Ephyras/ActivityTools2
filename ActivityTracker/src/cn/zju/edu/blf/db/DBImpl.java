@@ -23,6 +23,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 
+import cn.zju.edu.ActivityConfiguration;
 import cn.zju.edu.blf.dao.LowLevelInteraction;
 import cn.zju.edu.blf.dao.CResource;
 import cn.zju.edu.blf.dao.GroupedInteraction;
@@ -32,12 +33,13 @@ import cn.zju.edu.manager.IconManager;
 public class DBImpl {
 	Logger logger = Logger.getLogger(DBImpl.class.getName());
 	
-	private static String URL = "jdbc:mysql://155.69.147.247:3306/hci";
-	private static String USER_NAME = "blf";
-	private static String PASSWORD = "123456";
+	//private static String URL = "jdbc:mysql://155.69.147.247:3306/hci";
+	//private static String USER_NAME = "blf";
+	//private static String PASSWORD = "123456";
 	
 	private Connection connection;
 	
+	/*
 	private void readDBConfig()
 	{
 		try
@@ -90,10 +92,10 @@ public class DBImpl {
 			logger.info("read db config error: ", e);
 		}
 	}
-	
+	*/
 	public DBImpl() throws Exception
 	{
-		readDBConfig();
+		//readDBConfig();
 		connection = getConnection();
 	}
 	
@@ -104,8 +106,12 @@ public class DBImpl {
 	    
 		try
 		{
+			String url = ActivityConfiguration.getInstance().getURL();
+			String username = ActivityConfiguration.getInstance().getUSER_NAME();
+			String password = ActivityConfiguration.getInstance().getPASSWORD();
+			
 			connection = DriverManager
-		          .getConnection(URL + "?user=" +  USER_NAME + "&password=" + PASSWORD +"&useUnicode=true&characterEncoding=utf8");
+		          .getConnection(url + "?user=" +  username + "&password=" + password +"&useUnicode=true&characterEncoding=utf8");
 			
 		}catch(Exception e)
 		{
