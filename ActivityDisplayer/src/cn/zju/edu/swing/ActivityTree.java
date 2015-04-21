@@ -20,6 +20,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
+import org.apache.log4j.Logger;
+
 import cn.zju.edu.blf.dao.ActivityObject;
 import cn.zju.edu.manager.FilterManager;
 import cn.zju.edu.manager.HistoryActivityManager;
@@ -28,6 +30,8 @@ import cn.zju.edu.util.DateUtil;
 import cn.zju.edu.util.InteractionUtil;
 
 public class ActivityTree extends JTree implements ActionListener{
+	Logger logger = Logger.getLogger(ActivityTree.class.getName());
+	
 	protected DefaultMutableTreeNode rootNode;
 	protected DefaultMutableTreeNode node1;
 	protected DefaultMutableTreeNode node2;
@@ -165,6 +169,7 @@ public class ActivityTree extends JTree implements ActionListener{
 	     	try
 	     	{
 		        if (ae.getActionCommand().equals("show")) {
+		        	logger.info(a.getTitle() + "/" + a.getApplication());
 		        	ActivityTracker.run(a.getTitle(), a.getApplication());
 		        }
 		        
