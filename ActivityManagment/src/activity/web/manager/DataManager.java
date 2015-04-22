@@ -139,10 +139,6 @@ public class DataManager {
 			
 			String from = g.getDetails().get(0).getTime();
 			String to = g.getDetails().get(g.getDetails().size()-1).getTime();
-			if(!DateUtil.isSameDay(from, to))
-			{
-				logger.info(from + " - " + to);
-			}
 			
 			if(index >= 0)
 			{

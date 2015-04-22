@@ -2,10 +2,13 @@ package cn.zju.edu.swing;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,6 +25,7 @@ import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
 
+import cn.zju.edu.ActivityConfiguration;
 import cn.zju.edu.blf.dao.ActivityObject;
 import cn.zju.edu.manager.FilterManager;
 import cn.zju.edu.manager.HistoryActivityManager;
@@ -170,7 +174,19 @@ public class ActivityTree extends JTree implements ActionListener{
 	     	{
 		        if (ae.getActionCommand().equals("show")) {
 		        	logger.info(a.getTitle() + "/" + a.getApplication());
-		        	ActivityTracker.run(a.getTitle(), a.getApplication());
+		        	if(!ActivityConfiguration.getInstance().isJAVAFX())
+		        	{
+			        	String url = ActivityConfiguration.getInstance().getWEB_APPLICATION() + "/jsp/index.jsp";
+			        	
+			        	url += "?user="+System.getProperty("user.name");;
+			        	url += "&filter=" + URLEncoder.encode(a.getTitle()) + "&app="+URLEncoder.encode(a.getApplication());
+			        	
+			        	Desktop.getDesktop().browse(new URI(url));
+		        	}
+		        	else
+		        	{
+		        		ActivityTracker.run(a.getTitle(), a.getApplication());
+		        	}
 		        }
 		        
 	     	}catch(Exception e)

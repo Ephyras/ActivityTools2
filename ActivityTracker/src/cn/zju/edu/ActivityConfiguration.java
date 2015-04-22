@@ -17,6 +17,7 @@ public class ActivityConfiguration {
 	private String USER_NAME = "blf";
 	private String PASSWORD = "123456";
 	private String WEB_APPLICATION = "http://155.69.147.247:8080/ActivityManagment";
+	private boolean JAVAFX = true;
 	
 	private static ActivityConfiguration instance = null;
 	
@@ -63,6 +64,14 @@ public class ActivityConfiguration {
 	        	else if("PASSWORD".equals(params[0]))
 	        	{
 	        		PASSWORD = params[1];
+	        	}
+	        	else if("WEBAPPLICATION".equals(params[0]))
+	        	{
+	        		WEB_APPLICATION = params[1];
+	        	}
+	        	else if("JAVAFX".equals(params[0]))
+	        	{
+	        		JAVAFX = "TRUE".equalsIgnoreCase(params[1]) ? true : false;
 	        	}
 	            
 	            line = br.readLine();
@@ -125,4 +134,13 @@ public class ActivityConfiguration {
 	public void setWEB_APPLICATION(String wEB_APPLICATION) {
 		WEB_APPLICATION = wEB_APPLICATION;
 	}
+
+	public boolean isJAVAFX() {
+		return JAVAFX;
+	}
+
+	public void setJAVAFX(boolean jAVAFX) {
+		JAVAFX = jAVAFX;
+	}
+	
 }

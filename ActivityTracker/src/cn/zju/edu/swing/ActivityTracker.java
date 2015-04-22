@@ -142,7 +142,6 @@ class ApplicationFrame extends JFrame{
         webComponent = new WebView();
         
         webComponent.getEngine().load(DEMO_URL);
-        
         borderPane.setCenter(webComponent);
         Scene scene = new Scene(borderPane,1000,800);
         javafxPanel.setScene(scene);

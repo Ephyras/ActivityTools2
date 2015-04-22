@@ -164,7 +164,7 @@ public class GetInteractionsServlet extends HttpServlet {
 			response.setCharacterEncoding("UTF-8");
 			PrintWriter pw = response.getWriter();
 			String res = CommonUtil.toJson(events);
-			//logger.info(res);
+			logger.info(res);
 			pw.println(res);
 		}catch(Exception e)
 		{
