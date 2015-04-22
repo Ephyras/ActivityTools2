@@ -19,7 +19,7 @@ public class CharsetFilter implements Filter
   if( encoding==null ) encoding="UTF-8";
  }
 
- public void doFilter(ServletRequest request, ServletResponse response, FilterChain       next)
+ public void doFilter(ServletRequest request, ServletResponse response, FilterChain next)
  throws IOException, ServletException
  {
   // Respect the client-specified character encoding
@@ -29,11 +29,10 @@ public class CharsetFilter implements Filter
 
 
   /**
-* Set the default response content type and encoding
-*/
-response.setContentType("text/html; charset=UTF-8");
-response.setCharacterEncoding("UTF-8");
-
+   * Set the default response content type and encoding
+   */
+  response.setContentType("text/html; charset=UTF-8");
+  response.setCharacterEncoding("UTF-8");
 
   next.doFilter(request, response);
  }

@@ -5,8 +5,14 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.concurrent.Worker.State;
 
 import javax.swing.*;
+
+import org.apache.log4j.Logger;
 
 import cn.zju.edu.ActivityConfiguration;
 
@@ -16,6 +22,8 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 
 public class ActivityTracker {
+	static Logger logger = Logger.getLogger(ActivityTracker.class.getName());
+	
   public static void main(String [] args){
 
     SwingUtilities.invokeLater(new Runnable() {
@@ -81,7 +89,6 @@ class ApplicationFrame extends JFrame{
 	}
 	
     javafxPanel = new JFXPanel();
-
     initSwingComponents();
 
     loadJavaFXScene();
@@ -141,11 +148,27 @@ class ApplicationFrame extends JFrame{
         BorderPane borderPane = new BorderPane();
         webComponent = new WebView();
         
+        webComponent.getEngine().getLoadWorker().stateProperty().addListener( new ChangeListener<State>() {
+        	Logger logger = Logger.getLogger(this.getClass().getName());
+        	
+            @Override public void changed(ObservableValue ov, State oldState, State newState) {
+                if (newState == Worker.State.SUCCEEDED) 
+                {
+                	logger.info("load success ...");
+                	logger.info(webComponent.getEngine().getDocument().getElementById("container").getTextContent());
+                }
+              }
+        });
+        
         webComponent.getEngine().load(DEMO_URL);
+        
         borderPane.setCenter(webComponent);
         Scene scene = new Scene(borderPane,1000,800);
         javafxPanel.setScene(scene);
-
+        
+        
+        
+        //System.out.println(webComponent.getEngine().getDocument().getTextContent());
       }
     });
   }
