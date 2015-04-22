@@ -21,6 +21,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 
 public class ActivityTracker {
 	static Logger logger = Logger.getLogger(ActivityTracker.class.getName());
@@ -155,19 +156,19 @@ class ApplicationFrame extends JFrame{
             @Override public void changed(ObservableValue ov, State oldState, State newState) {
                 if (newState == Worker.State.SUCCEEDED) 
                 {
+                	logger.info("your jvm default encoding: " + Charset.defaultCharset());
                 	logger.info("load success ...");
-                	logger.info(webComponent.getEngine().getDocument().getElementById("container").getTextContent());
+                	logger.info(webComponent.getEngine().getDocument().getBaseURI());
                 }
               }
         });
+        
         
         webComponent.getEngine().load(DEMO_URL);
         
         borderPane.setCenter(webComponent);
         Scene scene = new Scene(borderPane,1000,800);
         javafxPanel.setScene(scene);
-        
-        
         
         //System.out.println(webComponent.getEngine().getDocument().getTextContent());
       }
