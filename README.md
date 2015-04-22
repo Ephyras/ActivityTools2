@@ -30,6 +30,6 @@ The database connection configuration file is also "db.txt".
 
 Two other parameters is for ActivityTracker: 
 
-      WEBAPPLICATION: the web application url
+* WEBAPPLICATION: the web application url
       
-      JAVAFX: show history activities in javafx panel if true, or open it using browser. this is because the encoding problem in javafx panel and i'm trying to fix it.
+* JAVAFX: show history activities in javafx panel if true, or open it using browser. this is because the encoding problem in javafx panel and i'm trying to fix it.
