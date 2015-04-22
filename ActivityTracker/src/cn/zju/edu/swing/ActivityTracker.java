@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.net.URLEncoder;
 
 public class ActivityTracker {
 	static Logger logger = Logger.getLogger(ActivityTracker.class.getName());
@@ -85,7 +86,7 @@ class ApplicationFrame extends JFrame{
 	
 	if(filter != null && !"".equals(filter.trim()))
 	{
-		DEMO_URL += "&filter=" + filter + "&app="+app;
+		DEMO_URL += "&filter=" + URLEncoder.encode(filter) + "&app="+URLEncoder.encode(app);
 	}
 	
     javafxPanel = new JFXPanel();
