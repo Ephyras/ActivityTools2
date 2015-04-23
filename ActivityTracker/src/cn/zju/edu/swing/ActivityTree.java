@@ -230,7 +230,7 @@ public class ActivityTree extends JTree implements ActionListener{
 	            				//Color c = new Color(255,255,0);
 			            		int day = DateUtil.getIntervalDayUtilNow(a.getLastTime());
 			            		
-			            		double sig = 1.0 / (1 + Math.exp(0.6 * (day-1)));
+			            		double sig = 1.0 / (1 + Math.exp(1 * (day-1)));
 			            		
 			            		int b = (int)(175 * sig + 135);
 			            		b = b>255 ? 255:b;

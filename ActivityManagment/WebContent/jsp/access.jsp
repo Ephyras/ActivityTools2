@@ -11,6 +11,8 @@
 	byte[] bytes = title.getBytes(StandardCharsets.ISO_8859_1);
 	title = new String(bytes, StandardCharsets.UTF_8);
 	
+	title = title.replace("\\", "\\\\");
+	
 	String info = request.getParameter("info");
 	boolean isDay = Boolean.parseBoolean(request.getParameter("isday"));
 	Logger logger = Logger.getLogger(this.getClass().getName());

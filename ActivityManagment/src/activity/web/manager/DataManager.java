@@ -248,6 +248,7 @@ public class DataManager {
 		sql += "from tbl_interactions a, tbl_group_interactions b, tbl_group_detail c"
 			+" where a.timestamp = c.interaction_time and b.group_id = c.group_id and a.user_name = '" + user + "' and a.timestamp = '" + time + "'"; 
 		
+		
 		DBResultSet rs = db.retrieveResultSet(sql);
 		
 		if(rs.getRecords().size() > 0)
