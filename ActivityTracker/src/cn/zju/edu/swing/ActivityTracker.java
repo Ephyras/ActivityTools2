@@ -149,6 +149,9 @@ class ApplicationFrame extends JFrame{
 
         BorderPane borderPane = new BorderPane();
         webComponent = new WebView();
+        borderPane.setCenter(webComponent);
+        final Scene scene = new Scene(borderPane,1000,800);
+        javafxPanel.setScene(scene);
         
         webComponent.getEngine().getLoadWorker().stateProperty().addListener( new ChangeListener<State>() {
         	Logger logger = Logger.getLogger(this.getClass().getName());
@@ -163,12 +166,7 @@ class ApplicationFrame extends JFrame{
               }
         });
         
-        
         webComponent.getEngine().load(DEMO_URL);
-        
-        borderPane.setCenter(webComponent);
-        Scene scene = new Scene(borderPane,1000,800);
-        javafxPanel.setScene(scene);
         
         //System.out.println(webComponent.getEngine().getDocument().getTextContent());
       }
