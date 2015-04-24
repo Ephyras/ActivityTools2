@@ -1,0 +1,1 @@
+start /B java -Dfile.encoding=UTF8 -jar activitytracker.jar
