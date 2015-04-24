@@ -1,9 +1,20 @@
 # Activity Tools
 
-##Database setup
+##Setup
 
+###Database Setup
 Your need to create a mysql database using the script "hci.sql" in folder "database".
 Then you can config the database connection information in txt file "db.txt"
+
+###Database Configuration in Applications
+* Data Collection Tool: "db.txt" 
+* Web Application: 
+
+If you put the "ActivityManagment.war" in tomcat webapps folder, tomcat will generate a folder "ActivityManagment" when first delpoyed. Then you can modify the database connection in path "WEB-INF\classes\config\db.txt" and restart tomcat. 
+
+If you import the project "ActivityManagment" into eclipse, you can configue the database in "src\config\db.txt".
+
+* Acticity Tracker (front-end) : "db.txt" 
 
 
 ## Data Collection Tool
