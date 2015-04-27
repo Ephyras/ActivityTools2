@@ -33,12 +33,12 @@
 	for(int i=0; i<changes.size(); i++)
 	{
 %>
-	<li>
+	<li data-jstree='{"icon":"../images/time.png"}'>
 		<%=changes.get(i).getTime() %>
 		<ul>
-			<li>Source Code</li>
+			<li data-jstree='{"icon":"../images/edit.png"}'>Source Code</li>
 		<%if(i>0) { %>
-			<li>Code Change</li>
+			<li data-jstree='{"icon":"../images/pen.png"}'>Code Change</li>
 		<%} %>
 		</ul>
 	</li>
@@ -130,7 +130,7 @@
 			if($(r).find(".CodeMirror").length <= 0)
 			{
 				var changeEditor = CodeMirror.fromTextArea($(r).find("textarea")[0], {
-				     lineNumbers: true,
+				     lineNumbers: false,
 				     matchBrackets: true,
 				     viewportMargin: Infinity,
 				     readOnly: true,

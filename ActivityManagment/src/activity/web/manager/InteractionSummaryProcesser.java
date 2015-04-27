@@ -129,7 +129,7 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 					if(pre != null)
 					{
 						double thr = CompareUtil.compareImage(pre, ll.getScreen());
-						if(thr < 0.8)
+						if(thr < 0.9)
 						{
 							screenStatus = 1;
 							cur = ll.getScreen();
@@ -145,7 +145,8 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 				}
 				
 				dm.updateGroupDetail(time, screenStatus, cur);
-				//db.updateGroupDetail(user, time, screenStatus, cur);
+				//set screen to empty in tbl_interactions
+				//dm.clearInteractionScreen(time);
 			}
 		}
 		logger.info("finish procseeing screenshots + " + user);

@@ -90,17 +90,17 @@ function addContextMenu4Code()
         items: {
             "showscreen": {name: "Show Activity Screenshots", icon: "screenshot", items: {
 			    			"screenday": {name: "Current Day"},
-			    			"screenall": {name: "All History"}
+			    			"screenall": {name: "Entire History"}
 			    		}
             },
-            "showacc": {name: "Show Activity Detail (Accessibility Data)", icon: "access",items: {
+            "showacc": {name: "Show Activity Accessibility Information", icon: "access",items: {
 			    			"accday": {name: "Current Day"},
-			    			"accall": {name: "All History"}
+			    			"accall": {name: "Entire History"}
 			            }
     		},
-            "showcode": {name: "Show Code History",icon: "code", items: {
+            "showcode": {name: "Show Edit History",icon: "code", items: {
 	            			"codeday": {name: "Current Day"},
-	            			"codeall": {name: "All History"}
+	            			"codeall": {name: "Entire History"}
             			}
             }
         }
@@ -135,12 +135,12 @@ function addContextMenu4Normal()
         items: {
         	"showscreen": {name: "Show Activity Screenshots", icon: "screenshot", items: {
     			"screenday": {name: "Current Day"},
-    			"screenall": {name: "All History"}
+    			"screenall": {name: "Entire History"}
     		}
 			},
-			"showacc": {name: "Show Activity Detail (Accessibility Data)", icon: "access",items: {
+			"showacc": {name: "Show Activity Accessibility Information", icon: "access",items: {
 			    			"accday": {name: "Current Day"},
-			    			"accall": {name: "All History"}
+			    			"accall": {name: "Entire History"}
 			            }
 			}
         }
@@ -253,11 +253,16 @@ function showAccessDialog(title, info, isday)
 function clusterTopic()
 {
 	$("#topicBtn").click(function(){
-		var day = $("#topicday").val();
+		//var day = $("#topicday").val();
 		$.ajax({
 			url: "topic.jsp",
 			data:{
-				day: day
+				day: 10,
+				'eclipse': $("#eclipseCheck").is(':checked'),
+				'browser': $("#browserCheck").is(':checked'),
+				'office': $("#officeCheck").is(':checked'),
+				'vs': $("#vsCheck").is(':checked'),
+				'other': $("#otherCheck").is(':checked'),
 			},
 			success:function(resText)
 			{

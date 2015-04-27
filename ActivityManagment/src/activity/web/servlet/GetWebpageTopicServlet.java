@@ -55,12 +55,28 @@ public class GetWebpageTopicServlet extends HttpServlet {
 		}
 		
 		String day = request.getParameter("day");
+		String eclipseCheck = request.getParameter("eclipse");
+		String browserCheck = request.getParameter("browser");
+		String officeCheck = request.getParameter("office");
+		String vsCheck = request.getParameter("vs");
+		String otherCheck = request.getParameter("other");
 		
-		int beforeDay = Integer.parseInt(day);
+		int beforeDay = 10;
+		if(day != null && !"".equals(day)) 
+		{
+			beforeDay = Integer.parseInt(day);
+		}
+		
 		String dateFilter = DateUtil.getDayBeforeOrAfter(new Date(), -beforeDay);
 		logger.info("topic day: " + dateFilter);
 		
 		WebpageTitleProcesser wp = new WebpageTitleProcesser();
+		wp.setEclipseCheck(eclipseCheck);
+		wp.setBrowserCheck(browserCheck);
+		wp.setOfficeCheck(officeCheck);
+		wp.setVsCheck(vsCheck);
+		wp.setOtherCheck(otherCheck);
+		
 		String res = wp.process(dateFilter, aggrGroup);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");

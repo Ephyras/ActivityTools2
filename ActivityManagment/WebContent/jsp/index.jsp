@@ -152,31 +152,41 @@
 			<tr class="leftTableTr">
 				<td>
 				<fieldset class="leftgroup">
-				<legend>Filter Applications</legend>
-				<div id="applications">
-					<div class="eclipseDiv">
-						<input type="checkbox" checked="checked" name="eclipseCheck" id="eclipseCheck" /> <label for="eclipseCheck" class="labelCss">Eclipse</label>
-					</div>
-					<div class="browserDiv">
-						<input type="checkbox" checked="checked" name="browserCheck" id="browserCheck" /> <label for="browserCheck" class="labelCss">Browser</label>
-					</div>
-					<div class="docDiv">
-						<input type="checkbox" checked="checked" name="officeCheck" id="officeCheck" /> <label for="officeCheck" class="labelCss">Office Document</label>
-					</div>
-					<div class="vsDiv">
-						<input type="checkbox" checked="checked" name="vsCheck" id="vsCheck" /> <label for="vsCheck" class="labelCss">Visual Studio</label>
-					</div>
-					<div class="otherDiv">
-						<input type="checkbox" checked="checked" name="otherCheck" id="otherCheck" /> <label for="otherCheck" class="labelCss">Other Applications</label>
-					</div>
-				</div> 
+				<legend>Filter by Applications</legend>
+				<table>
+				<tr>
+					<td>
+					<div id="applications">
+						<div class="eclipseDiv">
+							<input type="checkbox" checked="checked" name="eclipseCheck" id="eclipseCheck" /> <label for="eclipseCheck" class="labelCss">Eclipse</label>
+						</div>
+						<div class="browserDiv">
+							<input type="checkbox" checked="checked" name="browserCheck" id="browserCheck" /> <label for="browserCheck" class="labelCss">Browser</label>
+						</div>
+						<div class="docDiv">
+							<input type="checkbox" checked="checked" name="officeCheck" id="officeCheck" /> <label for="officeCheck" class="labelCss">Office Document</label>
+						</div>
+						<div class="vsDiv">
+							<input type="checkbox" checked="checked" name="vsCheck" id="vsCheck" /> <label for="vsCheck" class="labelCss">Visual Studio</label>
+						</div>
+						<div class="otherDiv">
+							<input type="checkbox" checked="checked" name="otherCheck" id="otherCheck" /> <label for="otherCheck" class="labelCss">Other Applications</label>
+						</div>
+					</div> 
+					</td>
+					<td style="vertical-align: top; width:30%">
+						<input type="button" name="topicBtn" id="topicBtn" value="Topic Cluster" class="mybtn"/>
+					</td>
+				</tr>
+				</table>
+				
 				</fieldset>
 			</td>
 			</tr>
 			<tr class="leftTableTr">
 				<td align="left">
 					<fieldset class="leftgroup">
-					<legend>Filter Query</legend>
+					<legend>Filter by Keywords</legend>
 					<table width="100%">
 						<tr>
 							<td><input type="text" name="filterContent" id="filterContent" class="filterInput" value=""/>
@@ -196,7 +206,7 @@
 			<tr class="leftTableTr">
 			<td align="left">
 					<fieldset class="leftgroup">
-					<legend>Coordinated Activities</legend>
+					<legend>Filter by Correlated Activities</legend>
 					<table width="100%">
 						<tr>
 							<td>
@@ -206,13 +216,14 @@
 						</tr>
 						<tr>
 							<td align="right">
-								<input type="button" name="coordinatedBtn" id="coordinatedBtn" value="Find Coordinated Activities" class="mybtn"/>
-								<input type="button" name="reset" id="reset" value="Reset" class="mybtn" width="100px"/>
+								<input type="button" name="coordinatedBtn" id="coordinatedBtn" value="Find Correlated Activities" class="mybtn"/>
+								<input type="button" name="reset" id="reset" value="Clear" class="mybtn" width="100px"/>
 							</td>
 						</tr>
 					</table>
 					</fieldset>
 			</td></tr>
+			<!--
 			<tr class="leftTableTr">
 			<td align="right">
 				<fieldset class="leftgroup">
@@ -231,6 +242,7 @@
 				</fieldset>
 			</td>
 			</tr>
+			-->
 		</table>
 	</div>
 	

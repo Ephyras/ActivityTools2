@@ -1,4 +1,7 @@
  <%@page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8"%>
+
+<span>Recent </span><input type="text" id="day" name="day" value="10" style="width:30px"/><span>Days</span>
+
 <div style="float:top; text-align:right;color:blue;font-size:12px;"> 
 	<input type="radio" value="1" name="ttype" /> Table
 	<input type="radio" value="2" name="ttype" checked/> Foam Tree
@@ -13,6 +16,11 @@
 
 <script>
 var day = '<%=request.getParameter("day")%>';
+var eclipse = '<%=request.getParameter("eclipse")%>';
+var browser = '<%=request.getParameter("browser")%>';
+var office = '<%=request.getParameter("office")%>';
+var vs = '<%=request.getParameter("vs")%>';
+var other = '<%=request.getParameter("other")%>';
 var fill = d3.scale.category20();
 
 var topics;
@@ -24,6 +32,13 @@ var h = 600;
 $.ajax({
 	type: 'POST',
 	url: '${pageContext.request.contextPath}/GetWebpageTopicServlet?day='+day, 
+	data: {
+		'eclipse': eclipse,
+		'browser': browser,
+		'office': office,
+		'vs': vs,
+		'other': other,
+	},
 	success: function(responseText)
 	{
 		topics = responseText['topic'];

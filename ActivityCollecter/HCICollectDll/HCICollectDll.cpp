@@ -344,7 +344,7 @@ BOOL isNeedScreenCaptured(string window, string strtime)
 		{
 			double interval = GetTimeDifference(toSystemTime(window_map[window]), toSystemTime(strtime));
 			cout<<window<<"#"<<interval<<endl;
-			if(GetTimeDifference(toSystemTime(window_map[window]), toSystemTime(strtime)) > 60*3)
+			if(GetTimeDifference(toSystemTime(window_map[window]), toSystemTime(strtime)) > 30)
 			{
 				window_map[window] = strtime;
 				return TRUE;
@@ -584,7 +584,8 @@ LRESULT CALLBACK LLMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 			
 			CloseHandle(thread);
 			
-			if(processName != "explorer.exe" && isNeedScreenCaptured(windowName, strTime))
+			if(processName != "explorer.exe" && interval > 1)
+				//isNeedScreenCaptured(windowName, strTime))
 			{
 				std::string img = "log/screen/" + strTime +  ".png";
 				GetScreeny(SCREEN_RECT,from_string(img).c_str(),100);

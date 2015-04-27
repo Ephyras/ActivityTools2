@@ -122,7 +122,7 @@ public class EventManager {
 	
 	protected boolean isOffice(GroupedInteraction e)
 	{
-		return "word.exe".equalsIgnoreCase(e.getApplication()) || "excel.exe".equalsIgnoreCase(e.getApplication());
+		return "WINWORD.EXE".equalsIgnoreCase(e.getApplication()) || "excel.exe".equalsIgnoreCase(e.getApplication());
 	}
 	
 	protected boolean isVS(GroupedInteraction e)

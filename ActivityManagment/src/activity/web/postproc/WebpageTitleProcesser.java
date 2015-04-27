@@ -59,6 +59,12 @@ public class WebpageTitleProcesser {
 		}
 	}
 	
+	private boolean eclipseCheck = false;
+	private boolean browserCheck = true;
+	private boolean officeCheck = false;
+	private boolean vsCheck = false;
+	private boolean otherCheck = false;
+	
 	private List<Cluster> clusters = new ArrayList<Cluster>();
 	//private Map<String, Integer> titleWordMap = new HashMap<String, Integer>();
 	
@@ -116,7 +122,7 @@ public class WebpageTitleProcesser {
 		
 		for(GroupedInteraction g : interactions)
 		{
-			if(InteractionUtil.isBrowser(g.getApplication()))
+			if(!isFilter(g.getApplication()))
 			{
 				if(timestamp != null && !"".equals(timestamp))
 				{
@@ -184,5 +190,116 @@ public class WebpageTitleProcesser {
 		 
 		         
 		clusters = byTopicClusters.getClusters();
+	}
+	
+	public boolean isFilter(String app)
+	{
+		if(InteractionUtil.isBrowser(app) && isBrowserCheck())
+		{
+			return false;
+		}
+		
+		if(eclipseCheck && isEclipse(app))
+		{
+			return false;
+		}
+		
+		if(officeCheck && isOffice(app))
+		{
+			return false;
+		}
+		
+		if(vsCheck && isVS(app))
+		{
+			return false;
+		}
+		
+		if(otherCheck && isOther(app))
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean isEclipse(String app)
+	{
+		return "eclipse.exe".equalsIgnoreCase(app) || "javaw.exe".equalsIgnoreCase(app);
+	}
+	
+	private boolean isOffice(String app)
+	{
+		return "winword.exe".equalsIgnoreCase(app) || "excel.exe".equalsIgnoreCase(app) || "powerpoint.exe".equalsIgnoreCase(app);
+	}
+	
+	private boolean isVS(String app)
+	{
+		return "deven.exe".equalsIgnoreCase(app);
+	}
+	
+	private boolean isOther(String app)
+	{
+		return !(InteractionUtil.isBrowser(app) || 
+				isEclipse(app) || isOffice(app) || isVS(app));
+	}
+	
+	public boolean isEclipseCheck() {
+		return eclipseCheck;
+	}
+	
+	public void setEclipseCheck(boolean eclipseCheck) {
+		this.eclipseCheck = eclipseCheck;
+	}
+	
+	public void setEclipseCheck(String eclipseCheck) {
+		this.eclipseCheck = "true".equalsIgnoreCase(eclipseCheck);
+	}
+	
+	public boolean isBrowserCheck() {
+		return browserCheck;
+	}
+
+	public void setBrowserCheck(boolean browserCheck) {
+		this.browserCheck = browserCheck;
+	}
+	
+	public void setBrowserCheck(String browserCheck) {
+		this.browserCheck = "true".equalsIgnoreCase(browserCheck);
+	}
+	
+	public boolean isOfficeCheck() {
+		return officeCheck;
+	}
+
+	public void setOfficeCheck(boolean officeCheck) {
+		this.officeCheck = officeCheck;
+	}
+	
+	public void setOfficeCheck(String officeCheck) {
+		this.officeCheck = "true".equalsIgnoreCase(officeCheck);
+	}
+	
+	public boolean isVsCheck() {
+		return vsCheck;
+	}
+
+	public void setVsCheck(boolean vsCheck) {
+		this.vsCheck = vsCheck;
+	}
+	
+	public void setVsCheck(String vsCheck) {
+		this.vsCheck = "true".equalsIgnoreCase(vsCheck);
+	}
+	
+	public boolean isOtherCheck() {
+		return otherCheck;
+	}
+
+	public void setOtherCheck(boolean otherCheck) {
+		this.otherCheck = otherCheck;
+	}
+	
+	public void setOtherCheck(String otherCheck) {
+		this.otherCheck = "true".equalsIgnoreCase(otherCheck);;
 	}
 }
