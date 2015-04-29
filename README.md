@@ -6,7 +6,9 @@
 Your need to create a mysql database using the script "hci.sql" in folder "database".
 Then you can config the database connection information in txt file "db.txt"
 
-"config.sql" is to set two parameter "wait_timeout", "interactive_timeout" in mysql server in order to prevent the sql connection timeout.
+"config.sql" is to set two parameter "wait_timeout", "interactive_timeout" in mysql server in order to prevent the sql connection timeout. 
+
+The data collection tool may crash since the msyql connection timeout or some other reasons, in this case, you can restart the datacollection tool 
 
 ###Database Configuration in Applications
 * Data Collection Tool: "db.txt" 
