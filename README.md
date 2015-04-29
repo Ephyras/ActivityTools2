@@ -6,6 +6,8 @@
 Your need to create a mysql database using the script "hci.sql" in folder "database".
 Then you can config the database connection information in txt file "db.txt"
 
+"config.sql" is to set two parameter "wait_timeout", "interactive_timeout" in mysql server in order to prevent the sql connection timeout.
+
 ###Database Configuration in Applications
 * Data Collection Tool: "db.txt" 
 * Web Application: 
