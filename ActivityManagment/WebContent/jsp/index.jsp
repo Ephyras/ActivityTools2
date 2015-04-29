@@ -72,7 +72,9 @@
 	            $('.fc-day[data-date="' + curSelectDay + '"]').addClass("orange");
 	            
 	            preSelectDay = curSelectDay;
-	        }
+	        },
+	        prevText: "",
+	        nextText: ""
 	    }); 
 		
 		$('#calendar').fullCalendar({

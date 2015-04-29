@@ -2,7 +2,9 @@ package activity.web.servlet;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -44,23 +46,26 @@ public class GetAccessServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String title = request.getParameter("title");
-		byte[] bytes = title.getBytes(StandardCharsets.ISO_8859_1);
-		title = new String(bytes, StandardCharsets.UTF_8);
+		//String title = request.getParameter("title");
+		//byte[] bytes = title.getBytes(StandardCharsets.ISO_8859_1);
+		//title = new String(bytes, StandardCharsets.UTF_8);
 		
-		String info = request.getParameter("info");
-		boolean isDay = Boolean.parseBoolean(request.getParameter("isday"));
+//		String info = request.getParameter("info");
+//		boolean isDay = Boolean.parseBoolean(request.getParameter("isday"));
 		
-		logger.info(title + "/" + info + "/" + isDay);
+		String timestamp = request.getParameter("timestamp");
 		
-		String app = info.split("/")[0];
-		String time = info.split("/")[1];
+		logger.info(timestamp);
+		
+//		String app = info.split("/")[0];
+//		String time = info.split("/")[1];
 		
 		HttpSession session = request.getSession();
 		
-		DataManager dm = (DataManager)session.getAttribute("dataManager");
-		List<GroupedInteraction> groups = (List<GroupedInteraction>)session.getAttribute("aggrInteractions");
-		if(dm == null || groups == null) 
+//		DataManager dm = (DataManager)session.getAttribute("dataManager");
+//		List<GroupedInteraction> groups = (List<GroupedInteraction>)session.getAttribute("aggrInteractions");
+		Map<String, List<ActionDetail>> actionsMap = (Map<String, List<ActionDetail>>)session.getAttribute("actiondetail");
+		if(actionsMap == null) 
 		{
 			response.getWriter().println("Session time out");
 			return;
@@ -68,7 +73,10 @@ public class GetAccessServlet extends HttpServlet {
 		
 		try
 		{
-			List<ActionDetail> actions = dm.getLLInteractionsForDetail(title, app, time, isDay, groups);
+			//HashMap<String, List<ActionDetail>> actions = dm.getLLInteractionsForDetail(title, app, time, isDay, groups);
+			//List<ActionDetail> actions = dm.getLLInteractionsForDetail(title, app, time, isDay, groups);
+			
+			List<ActionDetail> actions = actionsMap.get(timestamp);
 			
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
@@ -79,7 +87,7 @@ public class GetAccessServlet extends HttpServlet {
 			response.getWriter().println(res);
 		}catch(Exception e)
 		{
-			logger.info(e.getMessage());
+			logger.info(e.getMessage(), e);
 		}
 	}
 

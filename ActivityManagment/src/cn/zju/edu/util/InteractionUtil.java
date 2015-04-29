@@ -225,6 +225,43 @@ public class InteractionUtil {
 		return false;
 	}
 	
+	public static boolean isMainWindow(LowLevelInteraction u)
+	{
+		if(isBrowser(u.getApplication()))
+		{
+			return isWebPage(u);
+		}
+		else if("eclipse.exe".equals(u.getApplication()) || "javaw.exe".equals(u.getApplication()))
+		{
+			return  isEclipseMainWindow(u);
+		}
+		else if("WINWORD.EXE".equals(u.getApplication()))
+		{
+			return isWinWORDFile(u);
+		}
+		else if("devenv.exe".equals(u.getApplication()))
+		{
+			return !"".equals(getVSFile(u));
+		}
+		else if("EXCEL.EXE".equalsIgnoreCase(u.getApplication()))
+		{
+			return isExcelFile(u);
+		}
+		else if("WinEdt.exe".equalsIgnoreCase(u.getApplication()))
+		{
+			return isWinEdtFile(u);
+		}
+		else if("foxitreader.exe".equalsIgnoreCase(u.getApplication()))
+		{
+			return isFoxitReader(u);
+		}
+		else if("explorer.exe".equals(u.getApplication())) 
+		{
+			return false;
+		}
+		return true;
+	}
+	
 	public static boolean filterApplication(LowLevelInteraction u)
 
 	
@@ -290,6 +327,21 @@ public class InteractionUtil {
 		String app = u.getApplication();
 		String w1 = getInteractionTitle(u);
 		String w2 = getInteractionTitle(v);
+		
+		if(isMainWindow(u) && isMainWindow(v))
+		{
+			return w1.equals(w2);
+		}
+		else if(isMainWindow(u) && !isMainWindow(v))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+		
+		/*
 		if("firefox.exe".equals(app) || "iexplore.exe".equals(app))
 		{
 			return isWebPage(u) && (w1.equals(w2) || "".equals(w2) || !isWebPage(v));
@@ -330,6 +382,7 @@ public class InteractionUtil {
 		{
 			return w1.equals(w2) || "".equals(w2);
 		}
+		*/
 	}
 	
 	public static String getInteractionTitle(LowLevelInteraction u)

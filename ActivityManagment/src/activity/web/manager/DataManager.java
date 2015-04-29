@@ -4,10 +4,14 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
@@ -58,7 +62,7 @@ public class DataManager {
 			sql += " and interaction_time> '" + time + "'";
 		}
 		
-		sql += " order by group_id";
+		sql += " order by group_id, interaction_time";
 		
 		logger.info(sql);
 		
@@ -81,6 +85,7 @@ public class DataManager {
 			if(preId == groupId)
 			{
 				GroupDetail detail = new GroupDetail();
+				detail.setGroupId(groupId);
 				detail.setTime(interactionTime);
 				detail.setScreenStatus(screenStatus);
 				detail.setDuration(duration);
@@ -96,6 +101,7 @@ public class DataManager {
 				a.setApplication(groupApp);
 				a.setDuration(duration);
 				GroupDetail detail = new GroupDetail();
+				detail.setGroupId(groupId);
 				detail.setTime(interactionTime);
 				detail.setScreenStatus(screenStatus);
 				detail.setDuration(duration);
@@ -184,7 +190,13 @@ public class DataManager {
 			}
 			else
 			{
-				aggrGroup.add(g);
+				GroupedInteraction newG = new GroupedInteraction();
+				newG.setApplication(g.getApplication());
+				newG.setTitle(g.getTitle());
+				newG.setDuration(g.getDuration());
+				newG.addDetail(g.getDetails());
+				
+				aggrGroup.add(newG);
 			}
 		}
 		
@@ -394,56 +406,54 @@ public class DataManager {
 			GroupedInteraction g = groups.get(i);
 			if(g.getTitle().equals(title) && g.getApplication().equals(app))
 			{
-				int j = g.getDetails().size()-1;
-				for(; j>=0; j--)
+				int sz = g.getDetails().size()-1;
+				String t = g.getDetails().get(sz).getTime();
+				Date d = DateUtil.formatTime(t);
+				String t2 = DateUtil.fromDate(d, "yyyy-MM-dd");
+				if(isDay && !t2.equals(time)) continue;
+				
+				LowLevelInteraction first = null;
+				for(int k=0; k<g.getDetails().size(); k++)
 				{
-					String t = g.getDetails().get(j).getTime();
-					Date d = DateUtil.formatTime(t);
-					String t2 = DateUtil.fromDate(d, "yyyy-MM-dd");
-					if(isDay && !t2.equals(time)) continue;
-					
+					t = g.getDetails().get(k).getTime();
 					LowLevelInteraction ll = getAnInteractions(t, false);
+					
 					if(ll != null && (InteractionUtil.isControlType("edit", ll.getUiType()) && ll.getParentUiName().contains(".java")))
 					{
-						if(changes.size() <= 0)
-						{
-							CodeChange c = new CodeChange();
-							c.setChange("");
-							c.setTime(ll.getTimestamp());
-							String source = ll.getUiValue().replaceAll("\\\\n", "\n");
-							source = source.replaceAll("\\\\t", "\t");
-							c.setSource(source);
-							changes.add(c);
-						}
-						else
-						{
-							String lasttime = changes.get(changes.size()-1).getTime();
-							String lastSource = changes.get(changes.size()-1).getSource();
-							if(DateUtil.calcInterval(ll.getTimestamp(), lasttime) > 10 * 60)
-							{
-								String source = ll.getUiValue().replaceAll("\\\\n", "\n");
-								source = source.replaceAll("\\\\t", "\t");
-								
-								String changeText = CompareUtil.compareTextInHtml(source, lastSource);
-								List<CodeChangeDetail> details = CompareUtil.compareTextInDetail(source, lastSource);
-								
-								if(details.size() > 0)
-								{
-									CodeChange c = new CodeChange();
-									c.setChange(changeText);
-									c.setTime(ll.getTimestamp());
-									c.setSource(source);
-									c.setDetail(details);
-									changes.add(c);
-								}
-							}
-						}
-						
-						if(changes.size() >= 10) break;
+						first = ll; break;
 					}
-					
 				}
-				break;
+				
+				LowLevelInteraction last = null;
+				for(int k=sz; k>=0; k--)
+				{
+					t = g.getDetails().get(k).getTime();
+					LowLevelInteraction ll = getAnInteractions(t, false);
+					
+					if(ll != null && (InteractionUtil.isControlType("edit", ll.getUiType()) && ll.getParentUiName().contains(".java")))
+					{
+						last = ll; break;
+					}
+				}
+				
+				if(first == null || last == null) continue;
+				
+				String firstSource = first.getUiValue().replaceAll("\\\\n", "\n");
+				firstSource = firstSource.replaceAll("\\\\t", "\t");
+				String lastSource = last.getUiValue().replaceAll("\\\\n", "\n");
+				lastSource = lastSource.replaceAll("\\\\t", "\t");
+				//String changeText = CompareUtil.compareTextInHtml(firstSource, lastSource);
+				List<CodeChangeDetail> details = CompareUtil.compareTextInDetail(firstSource, lastSource);
+				
+				//if(details.size() <= 0) continue;
+				
+				CodeChange c = new CodeChange();
+				c.setTime(first.getTimestamp());
+				c.setSource(firstSource);
+				c.setDetail(details);
+				changes.add(c);
+				
+				
 			}
 		}
 		return changes;
@@ -457,9 +467,12 @@ public class DataManager {
 		return width < 100 && height < 100;
 	}
 	
-	public List<ActionDetail> getLLInteractionsForDetail(String title, String app,String day, boolean isDay,  List<GroupedInteraction> groups) throws Exception
+	public Map<String, List<ActionDetail>> getLLInteractionsForDetail(String title, String app,String day, boolean isDay,  List<GroupedInteraction> groups) throws Exception
 	{
-		List<LowLevelInteraction> list = new ArrayList<LowLevelInteraction>();
+		//List<LowLevelInteraction> list = new ArrayList<LowLevelInteraction>();
+		
+		HashMap<Integer, List<LowLevelInteraction>> map = new HashMap<Integer, List<LowLevelInteraction>>();
+		
 		for(int i=0; i<groups.size(); i++)
 		{
 			GroupedInteraction g = groups.get(i);
@@ -468,101 +481,119 @@ public class DataManager {
 				
 				for(int j=0; j<g.getDetails().size(); j++)
 				{
+					GroupDetail detail = g.getDetails().get(j);
 					String t = g.getDetails().get(j).getTime();
 					Date d = DateUtil.formatTime(t);
 					String t2 = DateUtil.fromDate(d, "yyyy-MM-dd");
 					if(isDay && !t2.equals(day)) continue;
 					
 					LowLevelInteraction ll = this.getAnInteractions(g.getDetails().get(j).getTime(), false);
-					if(ll != null) 
-					{
-						list.add(ll);
-					}
+					if(ll == null) continue;
 					
+					if(map.containsKey(detail.getGroupId()))
+					{
+						map.get(detail.getGroupId()).add(ll);
+					}
+					else
+					{
+						List<LowLevelInteraction> list2 = new ArrayList<LowLevelInteraction>();
+						list2.add(ll);
+						map.put(detail.getGroupId(), list2);
+					}
 				}
-				break;
 			}
 		}
 		
-		Set<ActionDetail> actions = new LinkedHashSet<ActionDetail>();
-		for(int i=0; i<list.size(); i++)
+		TreeMap<String, List<ActionDetail>> resMap = new TreeMap<String, List<ActionDetail>>();
+		
+		for(Entry<Integer, List<LowLevelInteraction>> entry: map.entrySet())
 		{
-			LowLevelInteraction ll = list.get(i);
+			List<LowLevelInteraction> list = entry.getValue();
 			
-			if(InteractionUtil.isControlType("tab item", ll.getUiType()) || 
-					InteractionUtil.isControlType("pane", ll.getUiType()) ||
-					InteractionUtil.isControlType("window", ll.getUiType())) 
-				continue;
-			
-			if("eclipse.exe".equals(app) || "javaw.exe".equals(app))
+			Set<ActionDetail> actions = new LinkedHashSet<ActionDetail>();
+			for(int i=0; i<list.size(); i++)
 			{
-				if(InteractionUtil.isControlType("edit", ll.getUiType()) && 
-						(ll.getParentUiName().contains(".java") || "Source".equalsIgnoreCase(ll.getParentUiName())))
-				{
+				LowLevelInteraction ll = list.get(i);
+				
+				if(InteractionUtil.isControlType("tab item", ll.getUiType()) || 
+						InteractionUtil.isControlType("pane", ll.getUiType()) ||
+						InteractionUtil.isControlType("window", ll.getUiType())) 
 					continue;
-				}
-
-				if(InteractionUtil.isControlType("edit", ll.getUiType()) && 
-						(ll.getParentUiName().equalsIgnoreCase("console")))
+				
+				if("eclipse.exe".equals(app) || "javaw.exe".equals(app))
 				{
-					String content = ll.getUiValue();
-					if(content.indexOf("Exception") < 0) continue;
-				}
-			}
-			
-			ActionDetail ad = new ActionDetail();
-			ad.setControlType(ll.getUiType());
-			ad.setParent(ll.getParentUiName());
-			ad.setTime(ll.getTimestamp());
-			String action = "";
-			if("".equals(ll.getUiName()) && "".equals(ll.getUiValue()))
-			{
-				action = "No Accessibility Information";
-			}
-			else if("".equals(ll.getUiValue()))
-			{
-				action += ll.getUiName();
-			}
-			else if("".equals(ll.getUiName()))
-			{
-				action += ll.getUiValue();
-			}
-			else
-			{
-				action += ll.getUiName() + "(" + ll.getUiValue() + ")";
-			}
-			
-			if(isDirectShowUIImage(ll) && "No Accessibility Information".equals(action)
-					//||(InteractionUtil.isControlType("pane", ll.getUiType()) && ll.getParentUiName().endsWith("java"))
-					)
-			{
-				String t = ll.getTimestamp();
-				if(!ll.isHasScreen())
-				{
-					for(int j=i-1; j>=0; j--)
+					if(InteractionUtil.isControlType("edit", ll.getUiType()) && 
+							(ll.getParentUiName().contains(".java") || "Source".equalsIgnoreCase(ll.getParentUiName())))
 					{
-						if(list.get(j).isHasScreen())
-						{
-							t = list.get(j).getTimestamp();
-							break;
-						}
+						continue;
+					}
+
+					if(InteractionUtil.isControlType("edit", ll.getUiType()) && 
+							(ll.getParentUiName().equalsIgnoreCase("console")))
+					{
+						String content = ll.getUiValue();
+						if(content.indexOf("Exception") < 0) continue;
 					}
 				}
 				
-				ad.setImgUrl(" <img src='" + contextPath + "/GetScreenshotsServlet?time="+t+"&acc=true'/>");
+				ActionDetail ad = new ActionDetail();
+				ad.setControlType(ll.getUiType());
+				ad.setParent(ll.getParentUiName());
+				ad.setTime(ll.getTimestamp());
+				String action = "";
+				if("".equals(ll.getUiName()) && "".equals(ll.getUiValue()))
+				{
+					action = "No Accessibility Information";
+				}
+				else if("".equals(ll.getUiValue()))
+				{
+					action += ll.getUiName();
+				}
+				else if("".equals(ll.getUiName()))
+				{
+					action += ll.getUiValue();
+				}
+				else
+				{
+					action += ll.getUiName() + "(" + ll.getUiValue() + ")";
+				}
+				
+				if(isDirectShowUIImage(ll) && "No Accessibility Information".equals(action)
+						//||(InteractionUtil.isControlType("pane", ll.getUiType()) && ll.getParentUiName().endsWith("java"))
+						)
+				{
+					String t = ll.getTimestamp();
+					if(!ll.isHasScreen())
+					{
+						for(int j=i-1; j>=0; j--)
+						{
+							if(list.get(j).isHasScreen())
+							{
+								t = list.get(j).getTimestamp();
+								break;
+							}
+						}
+					}
+					
+					ad.setImgUrl(" <img src='" + contextPath + "/GetScreenshotsServlet?time="+t+"&acc=true'/>");
+				}
+				
+				ad.setAction(action);
+				
+				//System.out.println("action hash code:" + ad.hashCode());
+				actions.add(ad);
 			}
 			
-			ad.setAction(action);
+			List<ActionDetail> list2 = new ArrayList<ActionDetail>(actions);
 			
-			//System.out.println("action hash code:" + ad.hashCode());
-			actions.add(ad);
+			//logger.info( list.get(0).getTimestamp() + " : " + CommonUtil.toJson4Action(list2));
+			
+			resMap.put(list.get(0).getTimestamp(), list2);
 		}
-		
-		List<ActionDetail> list2 = new ArrayList<ActionDetail>(actions);
 		
 		//Collections.sort(list2);
 		
-		return list2;
+		return resMap;
 	}
 	
 	private void setImgUrl(LowLevelInteraction ll)

@@ -3,6 +3,7 @@ package cn.zju.edu.swing;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -130,7 +131,7 @@ public class ActivityTree extends JTree implements ActionListener{
 	 public void addContextMenu()
 	 {   
 		 final JPopupMenu popup = new JPopupMenu();
-		 JMenuItem m = new JMenuItem("Show in Activity Tracker");
+		 JMenuItem m = new JMenuItem("View in Activity History Explorer");
 		 m.addActionListener(this);
 		 m.setActionCommand("show");
 		 popup.add(m);
@@ -243,7 +244,8 @@ public class ActivityTree extends JTree implements ActionListener{
 	            			}
 	            			else
 	            			{
-	            				this.setForeground(Color.BLUE);
+	            				this.setFont(new Font("MS Song", Font.BOLD, 12));
+	            				this.setForeground(new Color(210, 84, 221));
 	            			}
 	            		}
 	            		else
@@ -260,6 +262,8 @@ public class ActivityTree extends JTree implements ActionListener{
             	
             } else if(node.getParent() == tree.getModel().getRoot())
             {
+            	this.setFont(new Font("MS Song", Font.BOLD, 12));
+            	
             	Icon icon = IconManager.getIcon(node.toString());
             	this.setIcon(icon);
             	this.setText("" + value);

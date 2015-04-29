@@ -1,11 +1,12 @@
 package cn.zju.edu.blf.dao;
 
 import java.awt.image.BufferedImage;
+import java.io.Serializable;
 import java.util.List;
 
 import cn.zju.edu.util.InteractionUtil;
 
-public class ActionDetail implements Comparable<ActionDetail>{
+public class ActionDetail implements Comparable<ActionDetail>, Serializable{
 	private String time = "";
 	private String action = "";
 	private String controlType = "";

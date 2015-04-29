@@ -163,6 +163,7 @@ void MySqlImpl::init(string url, string username, string password)
 		conn->setSchema("hci");
 
 		bool reconnect = true;
+		
 		conn->setClientOption("MYSQL_OPT_RECONNECT", &reconnect);
 
 		sucess = !conn->isClosed();

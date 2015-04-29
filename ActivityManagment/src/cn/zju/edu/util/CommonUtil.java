@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.zju.edu.blf.dao.*;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
 import net.sf.json.util.PropertyFilter;
@@ -283,28 +284,15 @@ public class CommonUtil {
 		return jsonObject.toString();
 	}
     
-    public static String toJson4Action(List<ActionDetail> details)
+    public static String toJson4Action(List<ActionDetail> res)
     {
     	JsonConfig jsonConfig = new JsonConfig();
-
-		jsonConfig.setJsonPropertyFilter(new PropertyFilter()
-		{
-			public boolean apply(Object source, String name, Object value) {
-				if(source instanceof CodeChangeDetail)
-				{
-					if(value == null || "".equals(value))
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-		});
 		
 		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("data", details);
+		map.put("data", res);
 		
-		JSONObject jsonObject = JSONObject.fromObject( map, jsonConfig);  
+    	//JSONArray array = JSONArray.fromObject(res);
+		JSONObject jsonObject = JSONObject.fromObject(map, jsonConfig);  
 		return jsonObject.toString();
     }
     

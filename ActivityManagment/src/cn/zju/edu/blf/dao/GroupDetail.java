@@ -4,11 +4,18 @@ import java.awt.image.BufferedImage;
 import java.io.Serializable;
 
 public class GroupDetail implements Serializable{
+	private int groupId;
 	private String time;
 	private int screenStatus;
 	private BufferedImage screen;
 	private double duration;
 	
+	public int getGroupId() {
+		return groupId;
+	}
+	public void setGroupId(int groupId) {
+		this.groupId = groupId;
+	}
 	public String getTime() {
 		return time;
 	}

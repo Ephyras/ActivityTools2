@@ -520,11 +520,6 @@ public class HistoryActivityManager {
 					continue;
 				}
 				
-				if(j > 0)
-				{
-					//...
-				}
-				
 				BufferedImage cur = null;
 				screenStatus = 2;
 				
@@ -544,7 +539,7 @@ public class HistoryActivityManager {
 							screenStatus = 1;
 							cur = ll.getScreen();
 						}
-						System.out.println("correlation: " +thr);
+						System.out.println("correlation: " +thr + "/ screenStatus=" + screenStatus);
 					}
 					else
 					{
@@ -556,6 +551,7 @@ public class HistoryActivityManager {
 				
 				db.updateGroupDetail(user, time, screenStatus, cur);
 				aggrGroups.get(i).getDetails().get(j).setScreenStatus(screenStatus);
+				System.out.println("finish to process screenshot");
 			}
 		}
 	}

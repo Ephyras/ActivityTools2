@@ -132,7 +132,7 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 		int height = (int)screenSize.getHeight() - 100;
 		int x = (int)screenSize.getWidth() - width;
 		
-		frame = new JFrame("Activity Tracker");
+		frame = new JFrame(" Activity Viewer");
 		frame.setBounds(x, 5, width, height);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout(0, 0));
@@ -147,7 +147,7 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 		tabbedPane.addTab("Recent Activities", null, curScrollPane, null);
 		
 		coPane = new CoActivityPane();
-		tabbedPane.addTab("Coordinated Activities", null, coPane, null);
+		tabbedPane.addTab("Correlated Activities", null, coPane, null);
 		coPane.addFocusListener(this);
 		//coPane.setLayout(new BorderLayout(0, 0));
 		
@@ -168,7 +168,6 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 		btnSetting.setPreferredSize(new Dimension(setIcon.getIconWidth()+10,setIcon.getIconHeight()+10 ));
 		btnSetting.setIcon(setIcon);
 		toolPanel.add(btnSetting, BorderLayout.WEST);
-		
 		
 		/*
 		btnTimeline.addActionListener(new ActionListener()

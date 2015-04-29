@@ -1,6 +1,7 @@
 package cn.zju.edu.swing;
 
 import java.awt.EventQueue;
+import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -67,6 +68,7 @@ public class CoActivityPane extends JPanel  {
 		
 		this.title = title;
 		label.setText(title);
+		label.setFont(new Font("MS Song", Font.BOLD, 12));
 		label.setIcon(IconManager.getIcon(app));
 		this.app = app;
 		this.requestFocus();

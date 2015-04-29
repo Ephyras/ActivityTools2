@@ -2,8 +2,12 @@ package activity.web.manager;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -19,7 +23,7 @@ import activity.web.db.MySqlImpl;
 public class InteractionSummaryProcesser extends BackendProcesser{
 	Logger logger = Logger.getLogger(InteractionSummaryProcesser.class.getName());
 	
-	private String imageTime = null;
+	private String lastTime = null;
 	
 	public InteractionSummaryProcesser()
 	{
@@ -46,12 +50,15 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 		{
 			try
 			{
-				String lastTime = getLastGroupedInteractionTime(user);
+				lastTime = getLastGroupedInteractionTime(user);
+				logger.info("lattime: " + lastTime);
 				
 				List<LowLevelInteraction> interactions = this.getInteractions(user, lastTime);
+				logger.info("interaction size: " + interactions.size());
 				
-				List<List<Integer>> groups = aggrLLInteractions(interactions);
+				aggrLLInteractions(interactions, user);
 				
+				/*
 				for(int i=0; i<groups.size(); i++)
 				{
 					String groupTitle = this.getGroupTitle(groups.get(i), interactions);
@@ -77,6 +84,7 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 						db.insert(sql,groupId, time, duration);
 					}
 				}
+				*/
 			}catch(Exception e)
 			{
 				e.printStackTrace();
@@ -96,7 +104,7 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 	{
 		DataManager dm = new DataManager(user, db);
 		
-		List<GroupedInteraction> groups = dm.retrieveGroupInteractions(imageTime);
+		List<GroupedInteraction> groups = dm.retrieveGroupInteractions(lastTime);
 		
 		for(int i=0; i<groups.size(); i++)
 		{
@@ -108,11 +116,6 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 				if(screenStatus > 0)
 				{
 					continue;
-				}
-				
-				if(j > 0)
-				{
-					//...
 				}
 				
 				BufferedImage cur = null;
@@ -203,75 +206,189 @@ public class InteractionSummaryProcesser extends BackendProcesser{
 		return title;
 	}
 	
-	public List<List<Integer>> aggrLLInteractions(List<LowLevelInteraction> interactions) throws Exception
+	public  void aggrLLInteractions(List<LowLevelInteraction> interactions, String user) throws Exception
 	{
 		final double THRESHOLD = 60 * 60;
 		
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		Set<Integer> hasAggr = new HashSet<Integer>();
 		
+		Map<String, Set<Integer>> groupMap = new HashMap<String, Set<Integer>>();
+		
 		int i = 0;
+		int omit = 0;
 		while(i < interactions.size())
 		{
 			LowLevelInteraction u = interactions.get(i);
-			if(InteractionUtil.filterApplication(u)) 
+			if("explorer.exe".equals(u.getApplication()))
+			{
+				omit++;
+			}
+			if(!InteractionUtil.isMainWindow(u))
 			{
 				i++;
 				continue;
 			}
 			
-			if(hasAggr.contains(i)) 
+			String title = InteractionUtil.getInteractionTitle(u);
+			Set<Integer> curGroup = null;
+			if(groupMap.containsKey(title))
 			{
-				i++;
-				continue;
+				curGroup = groupMap.get(title);
 			}
+			else
+			{
+				curGroup = new HashSet<Integer>();
+				groupMap.put(title, curGroup);
+			}
+			curGroup.add(i);
 			
-			hasAggr.add(i);
-			List<Integer> group = new ArrayList<Integer>();
-			group.add(i);
+//			if(hasAggr.contains(i)) 
+//			{
+//				i++;
+//				continue;
+//			}
+			
+//			hasAggr.add(i);
+//			List<Integer> group = new ArrayList<Integer>();
+//			group.add(i);
 			
 			int j = i + 1;
 			while(j < interactions.size())
 			{
 				LowLevelInteraction v = interactions.get(j);
-				double interval = DateUtil.calcInterval(u.getTimestamp(), v.getTimestamp());
+				//double interval = DateUtil.calcInterval(u.getTimestamp(), v.getTimestamp());
+				 
+				//if(interval > THRESHOLD) break;
 				
-				if(hasAggr.contains(j)) 
-				{
-					j++;
-					continue;
-				}
+//				if(hasAggr.contains(j)) 
+//				{
+//					j++;
+//					continue;
+//				}
 				
-				if( !InteractionUtil.isAggregated(u, v) && interval > THRESHOLD)
+				if(v.getApplication() != null && !v.getApplication().equals(u.getApplication()))
 				{
 					break;
 				}
-				else if(InteractionUtil.isAggregated(u, v))
+				else if(InteractionUtil.isMainWindow(u) && InteractionUtil.isMainWindow(v))
 				{
-					if(interval > 60 * 60)
+					String w1 = InteractionUtil.getInteractionTitle(u);
+					String w2 = InteractionUtil.getInteractionTitle(v);
+					if(w1.equals(w2))
+					{
+						hasAggr.add(j);
+						curGroup.add(j);
+					}
+					else
 					{
 						break;
 					}
-					
-					hasAggr.add(j);
-					group.add(j);
-					if(InteractionUtil.getWindowName(u).equals(InteractionUtil.getWindowName(v)))
-					{
-						u = v;
-					}
 				}
+				else if(InteractionUtil.isMainWindow(u) && !InteractionUtil.isMainWindow(v))
+				{
+					curGroup.add(j);
+					//return true;
+				}
+				else
+				{
+					break;
+				}
+				
+//				if( !InteractionUtil.isAggregated(u, v) && interval > THRESHOLD)
+//				{
+//					break;
+//				}
+//				else if(InteractionUtil.isAggregated(u, v))
+//				{
+//					if(interval > 60 * 60)
+//					{
+//						break;
+//					}
+//					
+//					hasAggr.add(j);
+//					group.add(j);
+//					if(InteractionUtil.getWindowName(u).equals(InteractionUtil.getWindowName(v)))
+//					{
+//						u = v;
+//					}
+//				}
 				
 				j++;
 			}
-			groups.add(group);
+			i = j;
+			//groups.add(group);
 		}
 		
-		return groups;
+		int num = 0;
+		Set<Integer> all = new HashSet<Integer>();
+		for(Entry<String, Set<Integer>> e: groupMap.entrySet())
+		{
+			System.out.println(e.getKey());
+			List<Integer> list = new ArrayList<Integer>(e.getValue());
+			Collections.sort(list);
+			
+			List<Integer> sperated = new ArrayList<Integer>();
+			sperated.add(-1);
+			for(int k=0; k<list.size()-1; k++)
+			{
+				int idx1 = list.get(k);
+				int idx2 = list.get(k+1);
+				LowLevelInteraction u = interactions.get(idx1);
+				LowLevelInteraction v = interactions.get(idx2);
+				
+				double interval = DateUtil.calcInterval(u.getTimestamp(), v.getTimestamp());
+				if(interval > THRESHOLD)
+				{
+					sperated.add(k);
+				}
+			}
+			sperated.add(list.size()-1);
+			
+			for(int k=0; k<sperated.size()-1; k++)
+			{
+				int from = sperated.get(k)+1;
+				int to = sperated.get(k+1);
+				
+				String groupTitle = e.getKey();
+				String groupApp = this.getGroupApp(list, interactions);
+				
+				String sql = "insert into tbl_group_interactions(group_title, group_app, user_name) values(?, ?, ?)";
+				int groupId = db.insertWithAutoId(sql, groupTitle, groupApp, user);
+				logger.info("new group: " + groupId + "/" + groupTitle + "/" + (to-from));
+				
+				sql = "insert into tbl_group_detail(group_id, interaction_time, duration) values(?, ?, ?)";
+				for(int j=from; j<=to && j<list.size(); j++)
+				{
+					int m = list.get(j);
+					String time = interactions.get(m).getTimestamp();
+					
+					int nextK = m+1 >= interactions.size() ? m : m+1;
+					String nextTime = interactions.get(nextK).getTimestamp();
+					double duration = DateUtil.calcInterval(time, nextTime);
+					if(duration > 60 * 60)
+						duration = 1;
+					
+					db.insert(sql,groupId, time, duration);
+				}
+			}
+			
+			num += list.size();
+			System.out.println();
+		}
+		
+		System.out.println(num + "/" + interactions.size() + "/" + omit + "/" + all);
+		//return groups;
 	}
 	
-	public static void main(String[] args)
+	public static void main(String[] args) throws Exception
 	{
-		//InteractionSummaryProcesser isp = new InteractionSummaryProcesser();
+		InteractionSummaryProcesser isp = new InteractionSummaryProcesser();
+		
+		List<LowLevelInteraction> interactions = isp.getInteractions("baolingfeng", "2015-04-27 00:00:00.000");
+		isp.aggrLLInteractions(interactions, "baolingfeng");
+		
+		//isp.process();
 		
 		//isp.getAllUsers();
 		

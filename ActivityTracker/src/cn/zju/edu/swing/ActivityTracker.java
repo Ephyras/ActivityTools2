@@ -50,7 +50,7 @@ public class ActivityTracker {
 		    @Override
 		      public void run() {
 		        ApplicationFrame mainFrame = new ApplicationFrame(title, app);
-		        mainFrame.setTitle("Activity Tracker");
+		        mainFrame.setTitle("Activity History Explorer");
 		        URL url = ActivityTracker.class.getResource("/icons/appicon.png");
 				Toolkit kit = Toolkit.getDefaultToolkit();
 				Image img = kit.createImage(url);
@@ -131,7 +131,7 @@ class ApplicationFrame extends JFrame{
     urlPanel.add(refreshBtn);
     urlPanel.add(setBtn);
     
-    mainPanel.add(urlPanel, BorderLayout.SOUTH);
+    //mainPanel.add(urlPanel, BorderLayout.SOUTH);
 
     this.add(mainPanel);
     //this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

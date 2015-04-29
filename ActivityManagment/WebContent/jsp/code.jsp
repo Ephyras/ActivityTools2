@@ -16,7 +16,7 @@
 	String time = info.split("/")[1];
 	
 	DataManager dm = (DataManager)session.getAttribute("dataManager");
-	List<GroupedInteraction> groups = (List<GroupedInteraction>)session.getAttribute("aggrInteractions");
+	List<GroupedInteraction> groups = (List<GroupedInteraction>)session.getAttribute("allinteractions");
 	if(dm == null || groups == null) 
 	{
 		response.getWriter().println("Session time out");
@@ -37,7 +37,7 @@
 		<%=changes.get(i).getTime() %>
 		<ul>
 			<li data-jstree='{"icon":"../images/edit.png"}'>Source Code</li>
-		<%if(i>0) { %>
+		<%if(changes.get(i).getDetail().size()>0){ %>
 			<li data-jstree='{"icon":"../images/pen.png"}'>Code Change</li>
 		<%} %>
 		</ul>
@@ -72,6 +72,9 @@
  //$("#codesource").css("display", "none");
  
  $('#jstree_div').jstree();
+ 
+ $('.jstree-node').css("font-weight","bold");
+ 
  $('#jstree_div').on('changed.jstree', function (e, data) {
    //if(data.selected.length <= 0) return;
 	

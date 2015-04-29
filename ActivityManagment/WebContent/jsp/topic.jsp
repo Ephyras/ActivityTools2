@@ -2,7 +2,7 @@
 
 <span>Recent </span><input type="text" id="day" name="day" value="10" style="width:30px"/><span>Days</span>
 
-<div style="float:top; text-align:right;color:blue;font-size:12px;"> 
+<div style="float:top; text-align:right;color:blue;font-size:14px;font-weight:bold"> 
 	<input type="radio" value="1" name="ttype" /> Table
 	<input type="radio" value="2" name="ttype" checked/> Foam Tree
 </div>

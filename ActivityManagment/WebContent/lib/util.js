@@ -272,7 +272,7 @@ function clusterTopic()
 					hide: 'slide', 
 					width : '50%',
 					height : 'auto', 
-					title: "Web Page Topics",
+					title: "Topic Summary",
 					resizable:true, 
 					closeOnEscape:true,
 					position: ['center', 0],
