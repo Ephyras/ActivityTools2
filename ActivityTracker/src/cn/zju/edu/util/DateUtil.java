@@ -131,6 +131,42 @@ public class DateUtil {
 		return fromDate(before, "yyyy-MM-dd HH:mm:ss.SSS");
 	}
 	
+	@SuppressWarnings("deprecation")
+	public static boolean isSameDay(String t1, String t2)
+	{
+		try
+		{
+			Date d1 = formatTime(t1, "yyyy-MM-dd HH:mm:ss.SSS");
+			Date d2 = formatTime(t2, "yyyy-MM-dd HH:mm:ss.SSS");
+			
+			return d1.getYear() == d2.getYear() && 
+					d1.getMonth() == d2.getMonth() &&
+					d1.getDate() == d2.getDate();
+			
+		}catch(Exception e)
+		{
+			return false;
+		}
+	}
+	
+	public static String nextDay(String day)
+	{
+		try
+		{
+			Date d = formatTime(day, "yyyy-MM-dd");
+			Calendar c = Calendar.getInstance();
+			c.setTime(d);
+			c.add(Calendar.DATE, 1);
+			
+			return fromDate(c.getTime(), "yyyy-MM-dd");
+			
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+			return "";
+		}
+	}
+	
 	public static void main(String args[]) throws Exception
 	{
 		System.out.println(calcInterval("2015-02-02 19:56:14.210", "2015-02-02 19:57:30.110", "yyyy-MM-dd HH:mm:ss.SSS"));

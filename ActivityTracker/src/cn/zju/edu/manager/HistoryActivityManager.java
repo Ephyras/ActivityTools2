@@ -141,6 +141,52 @@ public class HistoryActivityManager {
 		//clusterWebTitleTopic();
 	}
 	
+	public List<GroupedInteraction> groupByDay()
+	{
+		List<GroupedInteraction> groupByDay = new ArrayList<GroupedInteraction>();
+		for(int i=0; i<groups.size(); i++)
+		{
+			GroupedInteraction g = groups.get(i);
+			
+			int index = -1;
+			for(int j=0; j<groupByDay.size(); j++)
+			{
+				GroupedInteraction g2 = groupByDay.get(j);
+				if(g.getTitle().equals(g2.getTitle()) && g.getApplication().equals(g2.getApplication()))
+				{
+					if(g.getDetails().size() <= 0 || g2.getDetails().size()<=0) continue;
+					
+					String t1 = g.getDetails().get(0).getTime();
+					String t2 = g2.getDetails().get(0).getTime();
+					
+					if(DateUtil.isSameDay(t1, t2))
+					{
+						index = j; break;
+					}
+				}
+			}
+			
+			String from = g.getDetails().get(0).getTime();
+			String to = g.getDetails().get(g.getDetails().size()-1).getTime();
+			
+			if(index >= 0)
+			{
+				GroupedInteraction g2 = groupByDay.get(index);
+				g2.setDuration(g2.getDuration() + g.getDuration());
+				g2.addDetail(g.getDetails());
+				g2.addTimeslot(from, to);
+			}
+			else
+			{
+				GroupedInteraction newG = new GroupedInteraction(g);
+				newG.addTimeslot(from, to);
+				groupByDay.add(newG);
+			}
+		}
+		
+		return groupByDay;
+	}
+	
 	public SearchQuery getSearchQuery(GroupedInteraction g)
 	{
 		SearchQuery sq = null;

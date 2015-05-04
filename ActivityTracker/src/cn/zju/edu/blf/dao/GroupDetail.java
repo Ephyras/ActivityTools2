@@ -3,10 +3,19 @@ package cn.zju.edu.blf.dao;
 import java.awt.image.BufferedImage;
 
 public class GroupDetail {
+	private int groupId;
 	private String time;
 	private int screenStatus;
 	private BufferedImage screen;
 	
+	
+	
+	public int getGroupId() {
+		return groupId;
+	}
+	public void setGroupId(int groupId) {
+		this.groupId = groupId;
+	}
 	public String getTime() {
 		return time;
 	}

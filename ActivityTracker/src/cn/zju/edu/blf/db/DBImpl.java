@@ -39,6 +39,17 @@ public class DBImpl {
 	
 	private Connection connection;
 	
+	
+	public void close()
+	{
+		try
+		{
+			connection.close();
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
 	/*
 	private void readDBConfig()
 	{
@@ -473,6 +484,84 @@ public class DBImpl {
 		return "";
 	}
 	
+	public List<GroupedInteraction> getGroupInteractions(String sql)
+	{
+		try
+		{
+			List<GroupedInteraction> list = new ArrayList<GroupedInteraction>();
+			Statement stat = connection.createStatement();
+			
+			ResultSet rs = stat.executeQuery(sql);
+			
+			int preId = -1;
+			
+			while(rs.next())
+			{
+				int groupId = rs.getInt("group_id");
+				String groupTitle = rs.getString("group_title");
+				String groupApp = rs.getString("group_app");
+				String interactionTime = rs.getString("interaction_time");
+				double duration = rs.getDouble("duration");
+				int screenStatus = rs.getInt("screen_status");
+				
+				if(preId == groupId)
+				{
+					GroupDetail detail = new GroupDetail();
+					detail.setGroupId(groupId);
+					detail.setTime(interactionTime);
+					detail.setScreenStatus(screenStatus);
+					
+					list.get(list.size()-1).addDetail(detail);
+					list.get(list.size()-1).setDuration(list.get(list.size()-1).getDuration() + duration);
+				}
+				else
+				{
+					GroupedInteraction a = new GroupedInteraction();
+					a.setGroupId(groupId);
+					a.setTitle(groupTitle);
+					a.setApplication(groupApp);
+					a.setDuration(duration);
+					GroupDetail detail = new GroupDetail();
+					detail.setGroupId(groupId);
+					detail.setTime(interactionTime);
+					detail.setScreenStatus(screenStatus);
+					
+					List<GroupDetail> details = new ArrayList<GroupDetail>();
+					details.add(detail);
+					a.setDetails(details);
+					list.add(a);
+					
+					preId = groupId;
+				}
+			}
+			
+			System.out.println("finish retrieve history activities");
+			
+			rs.close();
+			stat.close();
+			return list;
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<GroupedInteraction> getGroupInteractionsInDay(String day, String user)
+	{
+		String sql = "select a.group_id, group_title, group_app, interaction_time, duration, screen_status from tbl_group_interactions a, tbl_group_detail b where a.group_id = b.group_id ";
+		sql += "and user_name = '" + user + "' ";
+		
+		String from = day + " 00:00:00.000";
+		String to = day + " 24:00:00.000";
+		
+		sql += " and interaction_time> '" + from + "' and interaction_time<'" + to + "' ";
+		
+		sql += " order by group_id, interaction_time";
+		
+		return getGroupInteractions(sql);
+	}
+	
 	public List<GroupedInteraction> getGroupInteractionsGreaterThan(String t, String user) throws SQLException
 	{
 		System.out.println("retrieve history activities");
@@ -489,56 +578,8 @@ public class DBImpl {
 		
 		System.out.println(sql);
 		
-		List<GroupedInteraction> list = new ArrayList<GroupedInteraction>();
-		Statement stat = connection.createStatement();
+		return getGroupInteractions(sql);
 		
-		ResultSet rs = stat.executeQuery(sql);
-		
-		int preId = -1;
-		
-		while(rs.next())
-		{
-			int groupId = rs.getInt("group_id");
-			String groupTitle = rs.getString("group_title");
-			String groupApp = rs.getString("group_app");
-			String interactionTime = rs.getString("interaction_time");
-			double duration = rs.getDouble("duration");
-			int screenStatus = rs.getInt("screen_status");
-			
-			if(preId == groupId)
-			{
-				GroupDetail detail = new GroupDetail();
-				detail.setTime(interactionTime);
-				detail.setScreenStatus(screenStatus);
-				
-				list.get(list.size()-1).addDetail(detail);
-				list.get(list.size()-1).setDuration(list.get(list.size()-1).getDuration() + duration);
-			}
-			else
-			{
-				GroupedInteraction a = new GroupedInteraction();
-				a.setGroupId(groupId);
-				a.setTitle(groupTitle);
-				a.setApplication(groupApp);
-				a.setDuration(duration);
-				GroupDetail detail = new GroupDetail();
-				detail.setTime(interactionTime);
-				detail.setScreenStatus(screenStatus);
-				
-				List<GroupDetail> details = new ArrayList<GroupDetail>();
-				details.add(detail);
-				a.setDetails(details);
-				list.add(a);
-				
-				preId = groupId;
-			}
-		}
-		
-		System.out.println("finish retrieve history activities");
-		
-		rs.close();
-		stat.close();
-		return list;
 	}
 	
 	public void updateGroupDetail(String user, String time, int screenStatus, BufferedImage img)  throws Exception
@@ -575,5 +616,31 @@ public class DBImpl {
 		{
 			if(cs != null) cs.close();
 		}
+	}
+	
+	public List<String> getAllUsers()
+	{
+		String sql = "select distinct user_name from tbl_interactions";
+		
+		List<String> userList = new ArrayList<String>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		
+		try
+		{
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery(sql);
+			while(rs.next())
+			{
+				userList.add(rs.getString("user_name"));
+			}
+			stmt.close();
+			rs.close();
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return userList;
 	}
 }

@@ -15,6 +15,14 @@ public class GroupedInteraction implements Comparable<GroupedInteraction>{
 	
 	private List<String> timeslots = new ArrayList<String>();
 	
+	public GroupedInteraction(GroupedInteraction g)
+	{
+		this.setApplication(g.getApplication());
+		this.setTitle(g.getTitle());
+		this.setDetails(g.getDetails());
+		this.setDuration(g.getDuration());
+	}
+	
 	public void addTimeslot(String from, String to)
 	{
 		timeslots.add(from);
