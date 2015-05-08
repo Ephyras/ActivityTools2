@@ -467,6 +467,63 @@ public class DataManager {
 		return width < 100 && height < 100;
 	}
 	
+	public Map<String, List<String>> getScreenshotsForDetail(String title, String app, String day, boolean isDay, List<GroupedInteraction> groups) throws Exception
+	{
+		HashMap<Integer, List<LowLevelInteraction>> map = new HashMap<Integer, List<LowLevelInteraction>>();
+		
+		for(int i=0; i<groups.size(); i++)
+		{
+			GroupedInteraction g = groups.get(i);
+			if(g.getTitle().equals(title) && g.getApplication().equals(app))
+			{
+				
+				for(int j=0; j<g.getDetails().size(); j++)
+				{
+					GroupDetail detail = g.getDetails().get(j);
+					String t = g.getDetails().get(j).getTime();
+					Date d = DateUtil.formatTime(t);
+					String t2 = DateUtil.fromDate(d, "yyyy-MM-dd");
+					if(isDay && !t2.equals(day)) continue;
+					
+					LowLevelInteraction ll = this.getAnInteractions(g.getDetails().get(j).getTime(), false);
+					if(ll == null) continue;
+					
+					//if(!ll.isHasScreen()) continue; 
+					
+					if(map.containsKey(detail.getGroupId()))
+					{
+						map.get(detail.getGroupId()).add(ll);
+					}
+					else
+					{
+						List<LowLevelInteraction> list2 = new ArrayList<LowLevelInteraction>();
+						list2.add(ll);
+						map.put(detail.getGroupId(), list2);
+					}
+				}
+			}
+		}
+		
+		TreeMap<String, List<String>> resMap = new TreeMap<String, List<String>>();
+		
+		for(Entry<Integer, List<LowLevelInteraction>> entry: map.entrySet())
+		{
+			List<LowLevelInteraction> list = entry.getValue();
+			List<String> list2 = new ArrayList<String>();
+			for(int i=0; i<list.size(); i++)
+			{
+				if(list.get(i).isHasScreen())
+				{
+					list2.add(list.get(i).getTimestamp());
+				}
+			}
+			
+			resMap.put(list.get(0).getTimestamp(), list2);
+		}
+		
+		return resMap;
+	}
+	
 	public Map<String, List<ActionDetail>> getLLInteractionsForDetail(String title, String app,String day, boolean isDay,  List<GroupedInteraction> groups) throws Exception
 	{
 		//List<LowLevelInteraction> list = new ArrayList<LowLevelInteraction>();

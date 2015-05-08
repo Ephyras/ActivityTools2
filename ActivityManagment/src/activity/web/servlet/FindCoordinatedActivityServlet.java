@@ -116,12 +116,14 @@ public class FindCoordinatedActivityServlet extends HttpServlet {
 				
 				if(title.equals(g.getTitle()) && application.equals(g.getApplication()))
 				{
-					coordinatedGroup.add(g);
+					//coordinatedGroup.add(g);
 					
 					for(int j=0; j<g.getTimeslots().size(); j+=2)
 					{
 						String from1 = g.getTimeslots().get(j);
 						String to1 = g.getTimeslots().get(j+1);
+						
+						if(DateUtil.calcInterval(from1, to1) < 2) continue;
 						
 						boolean flag = false;
 						for(int k=0; k<groupByDay.size(); k++)
@@ -137,6 +139,8 @@ public class FindCoordinatedActivityServlet extends HttpServlet {
 							{
 								String from2 = g2.getTimeslots().get(m);
 								String to2 = g2.getTimeslots().get(m+1);
+								
+								if(DateUtil.calcInterval(from2, to2) < 2) continue;
 								
 								if(!(DateUtil.calcInterval(to1, from2) > MAX_INTERVAL ||  
 										DateUtil.calcInterval(to2, from1) >MAX_INTERVAL))

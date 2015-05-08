@@ -35,7 +35,7 @@ public class Stat {
 		List<String> users = db.getAllUsers();
 		
 		String startDay = "2015-04-15";
-		int totalDay = 20;
+		int totalDay = 30;
 		
 		for(String user : users)
 		{

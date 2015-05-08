@@ -137,7 +137,7 @@ public class EventManager {
 	
 	public boolean filterEvent(GroupedInteraction e)
 	{
-		if(e.getDuration() < 30) return true;
+		if(e.getDuration() < 5) return true;
 		
 		String title = e.getTitle();
 		

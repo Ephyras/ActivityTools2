@@ -140,6 +140,15 @@ public class GetScreenshotsServlet extends HttpServlet {
 		else 
 		{
 			img = MyImageUtil.drawRectOnImage(img, left, top, right-left, bottom-top);
+			
+			int cx = left-100;
+			int cy = top-30;
+			
+			cx = cx < 30 ? 30 : cx;
+			cy = cy < 30 ? 30 : cy;
+			
+			
+			img = MyImageUtil.drawStringOnImage(img, getUIDetail(ll), cx, cy);
 		}
 		
 		img = MyImageUtil.drawCircleOnImage(img, ll.getPx(), ll.getPy(), 10);
@@ -165,6 +174,59 @@ public class GetScreenshotsServlet extends HttpServlet {
 		db.close();
 		return null;
 		*/
+	}
+	
+	public String getUIDetail(LowLevelInteraction ll)
+	{
+		String app = ll.getApplication();
+		String append[] = {".java", ".jsp", ".txt", "css", ".xml"};
+		if("eclipse.exe".equals(app) || "javaw.exe".equals(app))
+		{
+			if(InteractionUtil.isControlType("edit", ll.getUiType()))
+			{
+				for(int i=0; i<append.length; i++)
+				{
+					if(ll.getParentUiName().contains(append[i]))
+					{
+						return ll.getParentUiName();
+					}
+				}
+
+				
+				return ll.getParentUiName() + "'s content: " + ll.getUiValue().substring(0, 20);
+				
+			}
+		}
+		
+		String action = "";
+		String uiname = ll.getUiName();
+		if(uiname.length()>20) 
+		{
+			uiname = uiname.substring(0, 20) + "...";
+		}
+		String uivalue = ll.getUiValue();
+		if(uivalue.length()>20) 
+		{
+			uivalue = uivalue.substring(0, 20) + "...";
+		}
+		if("".equals(ll.getUiName()) && "".equals(ll.getUiValue()))
+		{
+			action = "No Accessibility Information";
+		}
+//		else if("".equals(ll.getUiValue()))
+//		{
+//			action += uiname;
+//		}
+		else if("".equals(ll.getUiName()))
+		{
+			action = uivalue;
+		}
+		else
+		{
+			action = uiname;
+		}
+		
+		return action;
 	}
 	
 }

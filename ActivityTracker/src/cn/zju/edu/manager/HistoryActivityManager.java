@@ -278,7 +278,7 @@ public class HistoryActivityManager {
 	public List<ActivityObject> getCoordinatedActivities(String title, String app) throws Exception
 	{
 		int MAX_INTERVAL = 1 * 60;
-		String limitDate = DateUtil.getDayBeforeOrAfter(new Date(), -7);
+		String limitDate = DateUtil.getDayBeforeOrAfter(new Date(), -30);
 		
 		List<ActivityObject> res = new ArrayList<ActivityObject>();
 		
@@ -306,7 +306,7 @@ public class HistoryActivityManager {
 							String from2 = g2.getTimeslots().get(n);
 							String to2= g2.getTimeslots().get(n+1);
 							
-							if(DateUtil.calcInterval(from2, to2) < 2) continue;
+							//if(DateUtil.calcInterval(from2, to2) < 2) continue;
 							
 							if(DateUtil.calcInterval(from2, limitDate) > 0) continue;
 							

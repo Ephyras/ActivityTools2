@@ -17,3 +17,5 @@ NBA
 Ribbon
 Ö§¸¶±¦
 Facebook
+OK
+Cancel

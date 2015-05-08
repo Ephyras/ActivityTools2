@@ -5,6 +5,7 @@
 <%@ page import="cn.zju.edu.blf.dao.*" %>
 <%@ page import="cn.zju.edu.util.*" %>
 <%@ page import="java.nio.charset.StandardCharsets" %>
+<%@ page import="java.util.Map.Entry" %>
 <%
 	request.setCharacterEncoding("UTF-8");
 
@@ -25,55 +26,77 @@
 	
 	DataManager dm = (DataManager)session.getAttribute("dataManager");
 	List<GroupedInteraction> groupByDay = (List<GroupedInteraction>)session.getAttribute("interatcionsByDay");
-	if(dm == null || groupByDay == null) 
+	List<GroupedInteraction> groups = (List<GroupedInteraction>)session.getAttribute("aggrInteractions");
+	if(dm == null || groups == null) 
 	{
 		response.getWriter().println("Session time out");
 		return;
 	}
 	
-	for(int i=0; i<groupByDay.size(); i++)
-	{
-		GroupedInteraction g = groupByDay.get(i);
-		if(g.getDetails().size() <= 0) continue;
-		
-		String t = g.getDetails().get(0).getTime();
-		Date d = DateUtil.formatTime(t);
-		String t2 = DateUtil.fromDate(d, "yyyy-MM-dd");
-		if(isDay && ! time.equals(t2)) continue;
-		
-		if(title.equals(g.getTitle()) && app.equals(g.getApplication()))
-		{
-			logger.info(t);
+	Map<String, List<String>> map = dm.getScreenshotsForDetail(title, app, time, isDay, groups);
+	session.setAttribute("screendetail", map);
 %>
-<div class="slider-wrapper theme-bar">
-    <div class="ribbon"></div>
-		<div id="slider" class="nivoSlider">
-<% 
-			for(int j=0; j<g.getDetails().size(); j++)
-			{
-				if(g.getDetails().get(j).getScreenStatus() == 1)
+
+<table style="width:100%">
+	<tr> 
+	<td width="20%" style="vertical-align: top;">
+		<div id="jstree_div">
+			<ul>
+			<% 
+				for(Entry<String, List<String>> a: map.entrySet())
 				{
-					int groupId = dm.getGroupId(g.getDetails().get(j).getTime());
-					String src = contextPath + "/GetScreenshotsServlet?time="+g.getDetails().get(j).getTime();
-%>					
-					<img src="<%=src %>" />
-<%
+			%>
+				<li data-jstree='{"icon":"../images/time.png"}' style="font-weight:bold;">
+					<%=a.getKey() %>
+				</li>
+			<% 
 				}
-			}
-			
-			break;
-		}
-	}
-	
-%>
-</div></div>
+			%>
+			</ul>
+		</div>
+	</td>
+	<td width="80%" style="vertical-align: text-top;">
+		<div id="screens"></div>
+		<!-- 
+		<div class="slider-wrapper theme-bar">
+    	<div class="ribbon"></div>
+		<div id="slider" class="nivoSlider">
+		</div></div>
+		 -->
+	</td>
+</tr>
+</table>
+
 
 <link rel="stylesheet" href="../lib/themes/bar/bar.css" type="text/css" />
 <script>
-$('#slider').nivoSlider({
-	directionNav: true,
-	prevText: 'Prev',                 // Prev directionNav text
-    nextText: 'Next',                 // Next directionNav text
-    manualAdvance: true
-});
+$('#jstree_div').jstree();
+$('.jstree-node').css("font-weight","bold");
+$('#jstree_div').on('changed.jstree', function (e, data) {
+	//$('#detail').show();
+	
+	var selectedNode = data.instance.get_node(data.selected[0]);
+	var timestamp = selectedNode.text;
+	
+	$.ajax({
+		type: 'POST',
+		url: '${pageContext.request.contextPath}/GetScreenshotsForDetailServlet?timestamp='+timestamp, 
+		success: function(responseText)
+		{
+			console.log(responseText);
+			$('#screens').html('');
+			$('#screens').html(responseText);
+			
+			$('#slider').nivoSlider({
+				directionNav: true,
+				prevText: 'Prev',                 // Prev directionNav text
+			    nextText: 'Next',                 // Next directionNav text
+			    manualAdvance: true
+			});
+		}
+	})
+	
+ });
+
+
 </script>

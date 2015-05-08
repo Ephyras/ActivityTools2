@@ -99,11 +99,25 @@ void MySqlImpl::upload(vector<ResultEntity>& rs, string user, string logDir)
 
 		for(int i=0; i<rs.size(); i++)
 		{
+			string window = rs[i].getColumn("window_name");
+			string parentwindow = rs[i].getColumn("parent_window");
+
+			if(window.length() > 200)
+			{
+				cout<<window<<" length is too long"<<endl;
+				window = window.substr(0,199);
+			}
+			if(parentwindow.length() > 200)
+			{
+				cout<<parentwindow<<" length is too long"<<endl;
+				parentwindow = parentwindow.substr(0,199);
+			}
+
 			int idx = 1;
 			prep_stmt->setString(idx++, user.c_str());
 			prep_stmt->setString(idx++, rs[i].getColumn("timestamp").c_str());
-			prep_stmt->setString(idx++, rs[i].getColumn("window_name").c_str());
-			prep_stmt->setString(idx++, rs[i].getColumn("parent_window").c_str());
+			prep_stmt->setString(idx++, window.c_str());
+			prep_stmt->setString(idx++, parentwindow.c_str());
 			prep_stmt->setString(idx++, rs[i].getColumn("process_name").c_str());
 			prep_stmt->setString(idx++, rs[i].getColumn("p_x").c_str());
 			prep_stmt->setString(idx++, rs[i].getColumn("p_y").c_str());
