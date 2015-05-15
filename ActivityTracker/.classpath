@@ -49,5 +49,6 @@
 	<classpathentry kind="var" path="ECLIPSE_HOME/plugins/org.eclipse.osgi_3.10.2.v20150203-1939.jar"/>
 	<classpathentry kind="var" path="ECLIPSE_HOME/plugins/org.eclipse.ui.workbench_3.106.2.v20150204-1030.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/opencsv-3.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

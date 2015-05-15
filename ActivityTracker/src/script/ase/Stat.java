@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,40 +33,220 @@ public class Stat {
 	{
 		readFilterWords();
 		
-		DBImpl db = new DBImpl();
-		List<String> users = db.getAllUsers();
+		doStat4Correlated("yedeheng", "2015-04-20", 22);
 		
-		String startDay = "2015-04-15";
-		int totalDay = 30;
-		
-		for(String user : users)
-		{
-			doStat(user, startDay, totalDay);
-		}
+//		DBImpl db = new DBImpl();
+//		List<String> users = db.getAllUsers();
+//		
+//		String startDay = "2015-04-15";
+//		int totalDay = 30;
+//		
+//		for(String user : users)
+//		{
+//			
+//			//doStat(user, startDay, totalDay);
+//		}
 		
 		//all_stats.put("all", new GroupStat(totalDay));
 		
-		String fileName3 = folder  + "all_"+startDay + "_" + totalDay + ".csv";
-		CSVWriter writer3 = new CSVWriter(new OutputStreamWriter(new FileOutputStream(fileName3), "UTF-8"));
+//		String fileName3 = folder  + "all_"+startDay + "_" + totalDay + ".csv";
+//		CSVWriter writer3 = new CSVWriter(new OutputStreamWriter(new FileOutputStream(fileName3), "UTF-8"));
+//		
+//		String title = "Application#Number of Activity#1 Day#2-4 Day#5-7 Day#8-10 Day#>10 Day";
+//		writer3.writeNext(title.split("#"));
+//		
+//		for(Entry<String, GroupStat> entry : all_stats.entrySet())
+//		{
+//			int total = entry.getValue().total();
+//			String s = entry.getKey() + "#" + total + "#";
+//			s += entry.getValue().level1 + "(" + new DecimalFormat("#.##").format(entry.getValue().level1*100.0/total) + "%)#"
+//					+entry.getValue().level2+ "(" + new DecimalFormat("#.##").format(entry.getValue().level2*100.0/total)  + "%)#"
+//					+entry.getValue().level3+ "(" + new DecimalFormat("#.##").format(entry.getValue().level3*100.0/total)  + "%)#"
+//					+entry.getValue().level4+ "(" + new DecimalFormat("#.##").format(entry.getValue().level4*100.0/total)  + "%)#"
+//					+entry.getValue().level5+ "(" + new DecimalFormat("#.##").format(entry.getValue().level5*100.0/total)  + "%)#";
+//			
+//			writer3.writeNext(s.split("#"));
+//		}
+//		writer3.close();
 		
-		String title = "Application#Number of Activity#1 Day#2-4 Day#5-7 Day#8-10 Day#>10 Day";
-		writer3.writeNext(title.split("#"));
+//		db.close();
+	}
+	
+	public static void doStat4Correlated(String user, String startDay, int totalDay) throws Exception
+	{
+		String curDay = startDay;
+		DBImpl db = new DBImpl();
 		
-		for(Entry<String, GroupStat> entry : all_stats.entrySet())
-		{
-			int total = entry.getValue().total();
-			String s = entry.getKey() + "#" + total + "#";
-			s += entry.getValue().level1 + "(" + new DecimalFormat("#.##").format(entry.getValue().level1*100.0/total) + "%)#"
-					+entry.getValue().level2+ "(" + new DecimalFormat("#.##").format(entry.getValue().level2*100.0/total)  + "%)#"
-					+entry.getValue().level3+ "(" + new DecimalFormat("#.##").format(entry.getValue().level3*100.0/total)  + "%)#"
-					+entry.getValue().level4+ "(" + new DecimalFormat("#.##").format(entry.getValue().level4*100.0/total)  + "%)#"
-					+entry.getValue().level5+ "(" + new DecimalFormat("#.##").format(entry.getValue().level5*100.0/total)  + "%)#";
+		List<GroupedInteraction> allGroups = new ArrayList<GroupedInteraction>();
+		for(int i=0; i<totalDay; i++)
+		{	
+			List<GroupedInteraction> oneday = db.getGroupInteractionsInDay(curDay, user);
 			
-			writer3.writeNext(s.split("#"));
+			Collections.sort(oneday, new Comparator<GroupedInteraction>(){
+				public int compare(GroupedInteraction g1, GroupedInteraction g2) {
+					try
+					{
+						int sz1 = g1.getDetails().size();
+						int sz2 = g2.getDetails().size();
+					
+					
+						double interval = DateUtil.calcInterval(g1.getDetails().get(sz1-1).getTime(), 
+								g2.getDetails().get(sz2-1).getTime());
+						
+						if(interval < 0)
+						{
+							return 1;
+						}
+						else if(interval == 0)
+						{
+							return 0;
+						}
+						else
+						{
+							return -1;
+						}
+					}
+					catch(Exception e)
+					{
+						e.printStackTrace();
+					}
+					return -1;
+				}
+			});
+			
+			allGroups.addAll(oneday);
+			
+			curDay = DateUtil.nextDay(curDay);
 		}
-		writer3.close();
+		
+		List<GroupedInteraction> agroups = aggrGroups(allGroups);
+		
+		List<CorrelatedStat> cslist = new ArrayList<CorrelatedStat>();
+		for(int i=0; i<agroups.size(); i++)
+		{
+			CorrelatedStat cs = getCorrleatedGroups(agroups, agroups.get(i));
+
+//			if(cs.getTitle().equals("URLMatch.java(URLMatch/src)"))
+//			{
+//				System.out.println("###" + cs.getTitle());
+//				for(int j=0; j<cs.getDetails().size(); j++)
+//				{
+//					System.out.println(">>>> "+cs.getDetails().get(j).getTitle());
+//				}
+//			}
+			
+			cslist.add(cs);
+		}
+		
+		Collections.sort(cslist, new Comparator<CorrelatedStat>(){
+			public int compare(CorrelatedStat cs1, CorrelatedStat cs2) {
+				return cs2.getTotal() - cs1.getTotal();
+			}
+		});
+		
+		String[] applist = {"Browser", "Eclipse", "Latex Editor", "Txt Editor", "Office Document", "PDF Reader"};
+		int[] numlist = {1,1,1,1,1,1};
+		for(int i=0;  i<cslist.size(); i++)
+		{
+			boolean flag = false;
+			for(int j=0; j<numlist.length; j++)
+			{
+				if(numlist[j] == 1)
+				{
+					flag = true;
+					break;
+				}
+			}
+			if(!flag) break;
+			
+			for(int j=0; j<applist.length; j++)
+			{
+				if(cslist.get(i).getApp().equals(applist[j]) && numlist[j] != 0)
+				{
+					System.out.println(cslist.get(i).getTitle() + " / " + cslist.get(i).getApp());
+					System.out.println(cslist.get(i).getTotal() + " / "  + cslist.get(i).getInternal());
+					
+					numlist[j] = numlist[j] - 1;
+				}
+			}
+			
+		}
 		
 		db.close();
+	}
+	
+	public static CorrelatedStat getCorrleatedGroups(List<GroupedInteraction> groups, GroupedInteraction instance) throws Exception
+	{
+		String title = instance.getTitle();
+		String application = instance.getApplication();
+		
+		//List<GroupedInteraction> correlatedGroups = new ArrayList<GroupedInteraction>();
+		CorrelatedStat cs = new CorrelatedStat(title, getAppCategory(application));
+		
+		for(int i=0; i<groups.size(); i++)
+		{
+			GroupedInteraction g = groups.get(i);
+			if(g.getDetails().size() <= 0) break;
+			
+			String t1 = g.getDetails().get(0).getTime();
+			
+			if(title.equals(g.getTitle()) && application.equals(g.getApplication()))
+			{
+				//coordinatedGroup.add(g);
+				
+				for(int j=0; j<g.getTimeslots().size(); j+=2)
+				{
+					String from1 = g.getTimeslots().get(j);
+					String to1 = g.getTimeslots().get(j+1);
+					
+					if(DateUtil.calcInterval(from1, to1) < 2) continue;
+					
+					boolean flag = false;
+					for(int k=0; k<groups.size(); k++)
+					{
+						GroupedInteraction g2 = groups.get(k);
+						if(g2.getDetails().size() <= 0) continue;
+						
+						String t2 = g2.getDetails().get(0).getTime();
+						
+						//if(!DateUtil.isSameDay(t1, t2)) continue;
+						
+						for(int m=0; m<g2.getTimeslots().size(); m+=2)
+						{
+							String from2 = g2.getTimeslots().get(m);
+							String to2 = g2.getTimeslots().get(m+1);
+							
+							if(DateUtil.calcInterval(from2, to2) < 2) continue;
+							
+							if(!(DateUtil.calcInterval(to1, from2) > 30 ||  
+									DateUtil.calcInterval(to2, from1) > 30))
+							{
+								if(!cs.contain(g2))
+								{
+									cs.add(getAppCategory(g2.getApplication()));
+									cs.addDetail(g2);
+								}
+								
+								
+								
+//								if(g.getTitle().equals("URLMatch.java(URLMatch/src)") && k == 176)
+//								{
+//									System.out.println(i+"/"+k+">>>>" + g2.getTitle());
+//								}
+								
+								//correlatedGroups.add(g2); 
+								//flag = true;
+								break;
+							}
+						}
+					}
+					//if(flag) break;
+				}
+				
+				
+			}
+		}
+		return cs;
 	}
 	
 	public static void doStat(String user, String startDay, int totalDay) throws Exception
@@ -405,6 +587,18 @@ public class Stat {
 		else if("winword.exe".equalsIgnoreCase(app) || "excel.exe".equalsIgnoreCase(app) || "POWERPNT.EXE".equals(app))
 		{
 			return "Office Document";
+		}
+		else if("winedt.exe".equalsIgnoreCase(app))
+		{
+			return "Latex Editor";
+		}
+		else if("notepad.exe".equalsIgnoreCase(app) || "notepad++.exe".equalsIgnoreCase(app))
+		{
+			return "Txt Editor";
+		}
+		else if("foxitreader.exe".equalsIgnoreCase(app) || "acrobat.exe".equalsIgnoreCase(app) || "acrord32.exe".equalsIgnoreCase(app))
+		{
+			return "PDF Reader";
 		}
 		else
 		{

@@ -7,6 +7,7 @@ public class CodeChange implements Serializable{
 	private String time;
 	private String change;
 	private String source;
+	private String timespan;
 	
 	List<CodeChangeDetail> detail;
 	
@@ -42,6 +43,14 @@ public class CodeChange implements Serializable{
 	}
 	public void setSource(String source) {
 		this.source = source;
+	}
+
+	public String getTimespan() {
+		return timespan;
+	}
+
+	public void setTimespan(String timespan) {
+		this.timespan = timespan;
 	}
 	
 	

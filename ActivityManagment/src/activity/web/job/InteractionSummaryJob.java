@@ -41,4 +41,13 @@ public class InteractionSummaryJob implements StatefulJob{
     	logger.info(ex.getStackTrace());
     }
   }
+	
+  public static void main(String[] args)
+  {
+	InteractionSummaryProcesser isp = new InteractionSummaryProcesser();
+  	isp.process();
+  	
+  	ActionMatcher am = new ActionMatcher();
+  	am.process();
+  }
 }

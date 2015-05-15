@@ -86,6 +86,7 @@ $('.jstree-node').css("font-weight","bold");
 	
 	var selectedNode = data.instance.get_node(data.selected[0]);
 	var timestamp = selectedNode.text;
+	//timestamp = timestamp.split("(")[0].trim();
 	
 	if(isInit)
 	{

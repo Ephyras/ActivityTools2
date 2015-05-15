@@ -117,6 +117,7 @@ public class ActionMatcher extends BackendProcesser{
 					if(li.isHasScreen())
 					{
 						BufferedImage img = getScreenshot(user, li.getTimestamp());
+						if(img == null) continue;
 						
 						Mat m = CVUtil.img2Mat(img);
 						ImageItem imgItem = new ImageItem();

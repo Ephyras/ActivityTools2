@@ -34,7 +34,7 @@
 	{
 %>
 	<li data-jstree='{"icon":"../images/time.png"}'>
-		<%=changes.get(i).getTime() %>
+		<%=(changes.get(i).getTime() + " (" + changes.get(i).getTimespan() + ")") %>
 		<ul>
 			<li data-jstree='{"icon":"../images/edit.png"}'>Source Code</li>
 		<%if(changes.get(i).getDetail().size()>0){ %>
@@ -82,6 +82,8 @@
    var parentId = data.instance.get_parent(selectedNode);
    var parentNode = data.instance.get_node(parentId);
    
+   var timestamp = parentNode.text;
+   timestamp = timestamp.split("(")[0].trim();
    //alert(parentId + "/" + parentNode.text);
    
    if(parentId == "#") return;
@@ -91,7 +93,7 @@
    
    $("#codechange").dataTable({
 	   "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-	   "ajax": "${pageContext.request.contextPath}/GetCodeChangeServlet?type=change&time="+parentNode.text,
+	   "ajax": "${pageContext.request.contextPath}/GetCodeChangeServlet?type=change&time="+timestamp,
 		"columns" : [
 		 	{"data" : "type"},
 		 	{"data" : "content"}
@@ -164,7 +166,7 @@
 			  url: '${pageContext.request.contextPath}/GetCodeChangeServlet',
 			  data: {
 				  type: "source",
-				  time: parentNode.text
+				  time: timestamp
 			  },
 			  success: function(resText)
 			  {

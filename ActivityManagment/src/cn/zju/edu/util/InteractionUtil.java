@@ -150,7 +150,7 @@ public class InteractionUtil {
 	public static boolean isEclipseMainWindow(LowLevelInteraction u)
 	{
 		String w = getWindowName(u);
-		String pattern = ".+\\s\\-\\s.*\\.(java|xml|txt|class|jsp|properties|css)\\s\\-\\sEclipse";
+		String pattern = ".+\\s\\-\\s.*\\.(java|xml|txt|class|jsp|properties|css|js)\\s\\-\\sEclipse";
 		return w.matches(pattern);
 	}
 	
@@ -406,7 +406,7 @@ public class InteractionUtil {
 		}
 		else if("eclipse.exe".equals(app) || "javaw.exe".equals(app))
 		{
-			String pattern = ".+\\s\\-\\s.*\\.(java|xml|txt|class|jsp|css)\\s\\-\\sEclipse";
+			String pattern = ".+\\s\\-\\s.*\\.(java|xml|txt|class|jsp|css|js)\\s\\-\\sEclipse";
 			if(title.matches(pattern))
 			{
 				try

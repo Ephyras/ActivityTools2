@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="../lib/nivo-slider.css" type="text/css" />
 <link rel="stylesheet" href="../lib/themes/default/style.min.css" />
 
+
 <script src='../lib/moment.min.js'></script>
 <script src='../lib/jquery.min.js'></script>
 <script src='../lib/jquery-ui.min.js'></script>
@@ -208,7 +209,7 @@
 			<tr class="leftTableTr">
 			<td align="left">
 					<fieldset class="leftgroup">
-					<legend>Filter by Correlated Activities</legend>
+					<legend>Filter by Correlated Documents</legend>
 					<table width="100%">
 						<tr>
 							<td>
@@ -218,7 +219,7 @@
 						</tr>
 						<tr>
 							<td align="right">
-								<input type="button" name="coordinatedBtn" id="coordinatedBtn" value="Find Correlated Activities" class="mybtn"/>
+								<input type="button" name="coordinatedBtn" id="coordinatedBtn" value="Find Correlated Documents" class="mybtn"/>
 								<input type="button" name="reset" id="reset" value="Clear" class="mybtn" width="100px"/>
 							</td>
 						</tr>

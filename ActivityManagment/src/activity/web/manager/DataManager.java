@@ -1,6 +1,8 @@
 package activity.web.manager;
 
 import java.awt.image.BufferedImage;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -55,7 +57,7 @@ public class DataManager {
 	{
 		String sql = "select a.group_id, group_title, group_app, interaction_time, duration, screen_status "
 				+ "from tbl_group_interactions a, tbl_group_detail b where a.group_id = b.group_id ";
-		sql += "and user_name = '" + user + "' ";
+		sql += "and user_name = '" + user + "'";
 		
 		if(time!=null && !"".equals(time))
 		{
@@ -448,6 +450,12 @@ public class DataManager {
 				//if(details.size() <= 0) continue;
 				
 				CodeChange c = new CodeChange();
+				NumberFormat formatter = new DecimalFormat("#0.00");
+				double timespan = DateUtil.calcInterval(g.getDetails().get(0).getTime(), g.getDetails().get(sz).getTime());
+				logger.info(g.getDetails().get(0).getTime() + " / " + g.getDetails().get(sz).getTime());
+				timespan /= 60;
+				
+				c.setTimespan(formatter.format(g.getDuration()/60));
 				c.setTime(first.getTimestamp());
 				c.setSource(firstSource);
 				c.setDetail(details);
@@ -505,7 +513,7 @@ public class DataManager {
 		}
 		
 		TreeMap<String, List<String>> resMap = new TreeMap<String, List<String>>();
-		
+		NumberFormat formatter = new DecimalFormat("#0.00");
 		for(Entry<Integer, List<LowLevelInteraction>> entry: map.entrySet())
 		{
 			List<LowLevelInteraction> list = entry.getValue();
@@ -518,8 +526,13 @@ public class DataManager {
 				}
 			}
 			
-			resMap.put(list.get(0).getTimestamp(), list2);
+			double duration = DateUtil.calcInterval(list.get(0).getTimestamp(), list.get(list.size()-1).getTimestamp());
+			duration /= 60;
+			
+			resMap.put(list.get(0).getTimestamp()+ " (" + formatter.format(duration) + ")", list2);
 		}
+		
+		
 		
 		return resMap;
 	}
@@ -562,6 +575,7 @@ public class DataManager {
 		}
 		
 		TreeMap<String, List<ActionDetail>> resMap = new TreeMap<String, List<ActionDetail>>();
+		NumberFormat formatter = new DecimalFormat("#0.00");     
 		
 		for(Entry<Integer, List<LowLevelInteraction>> entry: map.entrySet())
 		{
@@ -645,7 +659,10 @@ public class DataManager {
 			
 			//logger.info( list.get(0).getTimestamp() + " : " + CommonUtil.toJson4Action(list2));
 			
-			resMap.put(list.get(0).getTimestamp(), list2);
+			double duration = DateUtil.calcInterval(list.get(0).getTimestamp(), list.get(list.size()-1).getTimestamp());
+			duration /= 60;
+			
+			resMap.put(list.get(0).getTimestamp() + " (" + formatter.format(duration) + ")", list2);
 		}
 		
 		//Collections.sort(list2);
