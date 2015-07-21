@@ -67,7 +67,7 @@ public class GetInteractionsServlet extends HttpServlet {
 		String filter = request.getParameter("filter");
 		String reset = request.getParameter("reset");
 		
-		int interval = 60;
+		int interval = 120;
 		String strInterval = request.getParameter("interval");
 		if(strInterval != null)
 		{

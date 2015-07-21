@@ -264,7 +264,7 @@ public class ActivityMonitor implements HotkeyListener, IntellitypeListener,  Fo
 
 		// Assign global hotkeys to Windows+A and ALT+SHIFT+B
 		//JIntellitype.getInstance().registerHotKey(1, JIntellitype.MOD_WIN, (int)'A');
-		JIntellitype.getInstance().registerHotKey(1, JIntellitype.MOD_ALT, (int)'A');
+		JIntellitype.getInstance().registerHotKey(1, JIntellitype.MOD_ALT, (int)'X');
 
 		JIntellitype.getInstance().addHotKeyListener(this);
 

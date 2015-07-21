@@ -438,7 +438,8 @@ std::string WINAPI GetElementValueStr(IUIAutomationElement* element)
 bool isWantedControl(string type)
 {
 	//string CONTROL_TYPE[] = {"window", "dialog", "menu item", "tab", "tool bar", "pane", "窗口", "对话框", "菜单项目", "工具栏", "窗格", "Tab 键"};
-	wstring CONTROL_TYPE[] = {_T("window"), _T("dialog"), _T("menu item"), _T("tab"), _T("tool bar"), _T("pane"), _T("窗口"), _T("对话框"), _T("菜单项目"), _T("工具栏"), _T("窗格"), _T("Tab 键")};
+	wstring CONTROL_TYPE[] = {_T("window"), _T("dialog"), _T("menu item"), _T("tab"), _T("tool bar"), _T("pane"), 
+							  _T("窗口"), _T("对话框"), _T("菜单项目"), _T("工具栏"), _T("窗格"), _T("Tab 键")};
 
 	for(int i=0; i<12; i++)
 	{
@@ -664,21 +665,20 @@ int GetScreeny(RECT r,LPCWSTR  lpszFilename, ULONG uQuality) // by Napalm
 
 void trim(std::string& str)
 {
-  string::size_type pos = str.find_last_not_of(' ');
-  if(pos != string::npos) {
-    str.erase(pos + 1);
-    pos = str.find_first_not_of(' ');
-    if(pos != string::npos) str.erase(0, pos);
-  }
-  else str.erase(str.begin(), str.end());
-
-  pos = str.find_last_not_of('\0');
-  if(pos != string::npos) {
-    str.erase(pos + 1);
-    pos = str.find_first_not_of(' ');
-    if(pos != string::npos) str.erase(0, pos);
-  }
-  else str.erase(str.begin(), str.end());
+ 	string::size_type pos = str.find_last_not_of(" \f\n\r\t\v");
+	if(pos != string::npos) 
+	{
+		str.erase(pos + 1);
+		pos = str.find_first_not_of(" \f\n\r\t\v");
+		if(pos != string::npos) 
+		{
+			str.erase(0, pos);
+		}
+	}
+	else 
+	{
+		str.erase(str.begin(), str.end());
+	}
 }
 
 vector<string> split(string& str, string delim)

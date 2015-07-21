@@ -21,11 +21,14 @@ typedef struct struct_ParamData {
 	POINT pt;
 	std::string windowName;
 	std::string processName;
+	std::string parentWindow;
+	HWND hwnd;
 } ParamData, *PParamData;
 
 
-typedef struct StructConfiguration
+class StructConfiguration
 {
+public:
 	bool mouseMode;
 	bool keyMode;
 	bool copyMode;
@@ -34,9 +37,29 @@ typedef struct StructConfiguration
 	FilterType filter;
 	vector<string> processes;
 	bool isUpload;
-}CConfig, *PConfig;
+	bool isNeedUrl;
+	string analysis_job;
 
-BOOL __declspec(dllexport) WINAPI initDll(CConfig& config);
+	vector<string> keys;
+	vector<string> actionKeys;
+
+	StructConfiguration()
+	{
+		mouseMode = true;
+		keyMode = true;
+		copyMode = true;
+		screenCaptureMode = 0;
+		logDir = "log";
+		filter = FilterType::All;
+
+		isUpload = false;
+		isNeedUrl = false;
+		analysis_job = "";
+	}
+};
+//CConfig, *PConfig;
+
+BOOL __declspec(dllexport) WINAPI initDll(StructConfiguration& config);
 
 BOOL __declspec(dllexport) WINAPI SetFitlerForHook(FilterType &pFilterType_in, std::vector<std::string> &processNameList_in);
 
@@ -59,7 +82,7 @@ LRESULT CALLBACK LLKeyboardHookProc_txt(int nCode, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK LLMouseHookProc_txt(int nCode, WPARAM wParam, LPARAM lParam);
 
 DWORD WINAPI AccessUIThreadFunction( LPVOID lpParam );
-
+DWORD WINAPI AccessUIWhenKeyPressThreadFunction( LPVOID lpParam );
 DWORD WINAPI WriteToDiskThreadFunction( LPVOID lpParam );
 
 void process_mouse_string(string strMouse);

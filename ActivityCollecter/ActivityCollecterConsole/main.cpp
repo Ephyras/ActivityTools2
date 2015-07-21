@@ -13,9 +13,9 @@ using namespace std;
 //#pragma comment(lib, "mysqlcppconn.lib")
 //#pragma comment(lib, "mysqlcppconn-static.lib")
 
-CConfig readConfig()
+StructConfiguration readConfig()
 {
-	CConfig config;
+	StructConfiguration config;
 
 	ifstream is("config.txt");
 
@@ -23,26 +23,32 @@ CConfig readConfig()
 
 	for (std::string line; std::getline(is, line); ) 
 	{
+		trim(line);
+		if(line == "" || line.find("#") == 0)
+		{
+			continue;
+		}
+
 		vector<string> param = split(line, "=");
 		if(param.size() <2) continue;
 
-		if(param[0] == "ALLMOUSE")
+		if(param[0] == "ALLMOUSE") //monitor mouse event including click action using accessibility api
 		{
 			config.mouseMode = param[1] == "TRUE" ? true : false;
 		}
-		else if(param[0] == "KEYBOARD")
+		else if(param[0] == "KEYBOARD") //monitor keyboard event
 		{
-			config.keyMode =  param[1] == "TRUE" ? true : false;
+			config.keyMode =  str2Num<int>(param[1]); //param[1] == "TRUE" ? true : false;
 		}
-		else if(param[0] == "COPY")
+		else if(param[0] == "COPY") //monitor copy event
 		{
 			config.copyMode =  param[1] == "TRUE" ? true : false;
 		}
-		else if(param[0] == "SCREENCAPTURE")
+		else if(param[0] == "SCREENCAPTURE") //screen capture mode;
 		{
 			config.screenCaptureMode = str2Num<int>(param[1]);
 		}
-		else if(param[0] == "FILTER")
+		else if(param[0] == "FILTER") //filter type, white list or all
 		{
 			if(param[1] == "WHITE")
 			{
@@ -53,13 +59,29 @@ CConfig readConfig()
 				config.filter = FilterType::All;
 			}
 		}
-		else if(param[0] == "PROCESS")
+		else if(param[0] == "PROCESS") // process list
 		{
 			config.processes = split(param[1], ",");
 		}
-		else if(param[0] == "UPLOAD")
+		else if(param[0] == "UPLOAD") // whether upload to a server, uploader is another program, see project ActivityUploader
 		{
 			config.isUpload =  param[1] == "TRUE" ? true : false;
+		}
+		else if(param[0] == "EXTRACTURL")
+		{
+			config.isNeedUrl =  param[1] == "TRUE" ? true : false;
+		}
+		else if(param[0] == "KEYS") // if keymode == 2, only monitor keys in config
+		{
+			config.keys = split(param[1], ",");
+		}
+		else if(param[0] == "ACTIONKEYS") // if keymode not 0,  monitor key action using accessiblity api
+		{
+			config.actionKeys = split(param[1], ",");
+		}
+		else if(param[0] == "ANALYSIS")
+		{
+			config.analysis_job = param[1];
 		}
     }
 
@@ -116,13 +138,13 @@ bool init(string logDir)
 		<<"event_name varchar(20), " 
 		<<"p_x int," 
 		<<"p_y int," 
-		<<"window_name varchar(200)," 
+		<<"window_name varchar(300)," 
 		<<"win_rect_left int," 
 		<<"win_rect_top int," 
 		<<"win_rect_right int,"
 		<<"win_rect_bottom int,"
 		<<"process_name varchar(30),"
-		<<"parent_window varchar(200) )";
+		<<"parent_window varchar(300) )";
 
 	
 	int rc1 = sqlite3_exec(db, ss1.str().c_str(), NULL, 0, &zErrMsg);
@@ -134,13 +156,13 @@ bool init(string logDir)
 		<<"event_name varchar(20),"
 		<<"p_x int,"
 		<<"p_y int,"
-		<<"window_name varchar(200),"
+		<<"window_name varchar(300),"
 		<<"win_rect_left int,"
 		<<"win_rect_top int,"
 		<<"win_rect_right int,"
 		<<"win_rect_bottom int,"
 		<<"process_name varchar(30),"
-		<<"parent_window varchar(200))";
+		<<"parent_window varchar(300))";
 		
 	int rc2 = sqlite3_exec(db, ss2.str().c_str(), NULL, 0, &zErrMsg);
 	if(rc2 > 0) printf(zErrMsg);
@@ -164,13 +186,40 @@ bool init(string logDir)
 	std::stringstream ss4;
 	ss4<<"create table tbl_copy_event ("
 		<<"timestamp varchar(25),"
-		<<"window_name varchar(200),"
+		<<"window_name varchar(300),"
 		<<"process_name varchar(30),"
-		<<"parent_window varchar(200),"
+		<<"parent_window varchar(300),"
 		<<"copy_text text )";
 		
 	int rc4 = sqlite3_exec(db, ss4.str().c_str(), NULL, 0, &zErrMsg);
 	if(rc4 > 0) printf(zErrMsg);
+
+	std::stringstream ss5;
+	ss5<<"create table tbl_webpage_url ("
+		//<<"window_name varchar(300),"
+		<<"url varchar(300),"
+		<<"window_name varchar(300),"
+		<<"parent_window varchar(300),"
+		<<"timestamp varchar(25) )";
+
+	int rc5 = sqlite3_exec(db, ss5.str().c_str(), NULL, 0, &zErrMsg);
+	if(rc5 > 0) printf(zErrMsg);
+
+	std::stringstream ss6;
+	ss6<<"create table tbl_key_action ("
+		<<"timestamp varchar(25),"
+		<<"action_name text,"
+		<<"action_type varchar(50),"
+		<<"action_value text,"
+		<<"bound_left int,"
+		<<"bound_top int,"
+		<<"bound_right int,"
+		<<"bound_bottom int,"
+		<<"action_parent_name text,"
+		<<"action_parent_type varchar(50) )";
+
+	int rc6 = sqlite3_exec(db, ss6.str().c_str(), NULL, 0, &zErrMsg);
+	if(rc6 > 0) printf(zErrMsg);
 
 	sqlite3_close_v2(db);
 	return rc1 == 0 && rc2 == 0 && rc3 == 0 && rc4 == 0;
@@ -196,7 +245,7 @@ int main()
 	}
 
 	string logDir = "log";
-	CConfig config = readConfig();
+	StructConfiguration config = readConfig();
 	config.logDir = logDir;
 
 	init(logDir);
@@ -205,15 +254,25 @@ int main()
 
 	SetConsoleCtrlHandler(beforeClose, TRUE);
 
-	STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-	ZeroMemory( &si, sizeof(si) );
-    si.cb = sizeof(si);
-    ZeroMemory( &pi, sizeof(pi) );
-
 	if(config.isUpload)
 	{
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+		ZeroMemory( &si, sizeof(si) );
+		si.cb = sizeof(si);
+		ZeroMemory( &pi, sizeof(pi) );
 		CreateProcess(_T("ActivityUploader.exe"), NULL, NULL,NULL,FALSE,0,NULL, NULL,&si,&pi);
+	}
+
+	if(config.analysis_job != "")
+	{
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+		ZeroMemory( &si, sizeof(si) );
+		si.cb = sizeof(si);
+		ZeroMemory( &pi, sizeof(pi) );
+		res = CreateProcess(str2wstr(config.analysis_job).c_str(), NULL, NULL,NULL,FALSE,0,NULL, NULL,&si,&pi);
+		cout<<"create analysis process "<<config.analysis_job<<", result: "<<res<<endl;
 	}
 	//uploader.run();
 
@@ -223,4 +282,6 @@ int main()
 		DispatchMessage(&msg);
 	}
 
+	return 0;
 }
+

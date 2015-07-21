@@ -1,7 +1,10 @@
 ALLMOUSE=TRUE
-KEYBOARD=FALSE
+KEYBOARD=0
 COPY=FALSE
 FILTER=WHITE
 SCREENCAPTURE=1
-PROCESS=eclipse,javaw,firefox,chrome,iexplore,WINWORD,EXCEL,devenv,notepad,POWERPNT,FoxitReader,pycharm,Acrobat,WinEdt,explorer,AcroRd32
+PROCESS=eclipse,javaw,firefox,chrome,iexplore,WINWORD,EXCEL,devenv,explorer,notepad,notepad++,sublime_text,FoxitReader,Acrobat,AcroRd32
 UPLOAD=TRUE
+EXTRACTURL=FALSE
+#KEYS=Ctrl+C,Ctrl+V,F5,F6,Left,Right,Up,Down,Enter,Tab
+#ACTIONKEYS=Enter,Tab,Ctrl+C,Ctrl+V

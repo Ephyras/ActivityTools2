@@ -7,6 +7,8 @@
 #include<Lmcons.h>
 using namespace std;
 
+std::string trim_copy(const std::string& s, const std::string& delimiters = " \f\n\r\t\v");
+
 void trim(std::string& str);
 
 vector<string> split(string& str, string delim);

@@ -1,3 +1,3 @@
-HOST=jdbc:mysql://155.69.147.247:3306/hci
+HOST=jdbc:mysql://155.69.147.247:3307/hci
 USER=blf
 PASSWORD=123456

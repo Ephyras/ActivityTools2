@@ -33,26 +33,41 @@ CRITICAL_SECTION  cs_mouse;
 CRITICAL_SECTION  cs_click;
 CRITICAL_SECTION  cs_key;
 CRITICAL_SECTION  cs_copy;
+CRITICAL_SECTION  cs_key_access;
 volatile int mLen = 0;
 volatile int kLen = 0;
 volatile int cLen = 0;
 volatile int copyLen = 0;
+volatile int kacessLen = 0;
 volatile int used = 0;
-char shared_mouse_memory1[MAX_LEN];
-char shared_mouse_memory2[MAX_LEN];
-char shared_key_memory1[MAX_LEN];
-char shared_key_memory2[MAX_LEN];
-char shared_click_memory1[MAX_LEN];
-char shared_click_memory2[MAX_LEN];
-char shared_copy_memory1[MAX_LEN];
-char shared_copy_memory2[MAX_LEN];
+//char shared_mouse_memory1[MAX_LEN];
+//char shared_mouse_memory2[MAX_LEN];
+//char shared_key_memory1[MAX_LEN];
+//char shared_key_memory2[MAX_LEN];
+//char shared_click_memory1[MAX_LEN];
+//char shared_click_memory2[MAX_LEN];
+//char shared_copy_memory1[MAX_LEN];
+//char shared_copy_memory2[MAX_LEN];
+//char shared_key_access_memory1[MAX_LEN];
+//char shared_key_access_memory2[MAX_LEN];
+
+char* shared_mouse_memory1 = NULL;
+char* shared_mouse_memory2 = NULL;
+char* shared_key_memory1 = NULL;
+char* shared_key_memory2 = NULL;
+char* shared_click_memory1 = NULL;
+char* shared_click_memory2 = NULL;
+char* shared_copy_memory1 = NULL;
+char* shared_copy_memory2 = NULL;
+char* shared_key_access_memory1 = NULL;
+char* shared_key_access_memory2 = NULL;
+
 
 sqlite3* db;
 ofstream errlog;
 HANDLE hWriteDisk;
 //DataMode dm;
 
-hash_map<string, string> window_map; //the window
 
 HWND copyHwnd;
 HWND copyViewer;
@@ -69,7 +84,11 @@ SYSTEMTIME preMouseWheelTime;
 
 RECT SCREEN_RECT;
 
-CConfig config;
+StructConfiguration config;
+
+hash_map<string, string> window_map; //the window map for screen capture
+hash_map<string, string> browsers; //browsers
+hash_map<string, string> window_url_map; //window url map
 
 BOOL is_no_logged = FALSE;
 BOOL isFirst = TRUE;
@@ -104,7 +123,7 @@ HMODULE WINAPI ModuleFromAddress(PVOID pv)
 	}
 }
 
-BOOL WINAPI initDll(CConfig& config_in)
+BOOL WINAPI initDll(StructConfiguration& config_in)
 {
 	config = config_in;
 
@@ -131,6 +150,11 @@ BOOL WINAPI initDll(CConfig& config_in)
 		isFirst = FALSE;
 	}
 	
+	shared_mouse_memory1 = new char[MAX_LEN];
+	shared_mouse_memory2 = new char[MAX_LEN];
+	shared_click_memory1 = new char[MAX_LEN];
+	shared_click_memory2 = new char[MAX_LEN];
+
 	memset(shared_mouse_memory1, 0, MAX_LEN);
 	memset(shared_mouse_memory2, 0, MAX_LEN);
 	memset(shared_click_memory1, 0, MAX_LEN);
@@ -142,23 +166,37 @@ BOOL WINAPI initDll(CConfig& config_in)
 		errlog<<"setup mouse hook failed"<<endl;
 	}
 	
-	if(config.keyMode == 1)
+	if(config.keyMode != 0)
 	{
 		if(!SetLowKeyboardHook()) {errlog<<"setup keyboard hook failed"<<endl;}
 		
 		InitializeCriticalSection(&cs_key);
+		InitializeCriticalSection(&cs_key_access);
+
+		shared_key_memory1 = new char[MAX_LEN];
+		shared_key_memory2 = new char[MAX_LEN];
+		shared_key_access_memory1 = new char[MAX_LEN];
+		shared_key_access_memory2 = new char[MAX_LEN];
 		memset(shared_key_memory1, 0, MAX_LEN);
 		memset(shared_key_memory2, 0, MAX_LEN);
+		memset(shared_key_access_memory1, 0, MAX_LEN);
+		memset(shared_key_access_memory2, 0, MAX_LEN);
 	}
 		
-	if(config.copyMode == 1)
+	if(config.copyMode)
 	{
 		SetCopyMonitor();
 
 		InitializeCriticalSection(&cs_copy);
+		shared_copy_memory1 = new char[MAX_LEN];
+		shared_copy_memory2 = new char[MAX_LEN];
 		memset(shared_copy_memory1, 0, MAX_LEN);
 		memset(shared_copy_memory2, 0, MAX_LEN);
 	}
+
+	browsers.insert(make_pair("firefox.exe", "Mozilla Firefox"));
+	browsers.insert(make_pair("chrome.exe", "Google Chrome"));
+	browsers.insert(make_pair("iexplore.exe", "Internet Explorer"));
 
 	int rc = sqlite3_open_v2((config.logDir + "/log.db3").c_str(), &db, SQLITE_OPEN_READWRITE, NULL);
 	if(rc > 0)
@@ -251,7 +289,8 @@ void close_data_collect()
 	int rc = sqlite3_open_v2((config.logDir+"/log.db3").c_str(), &db, SQLITE_OPEN_READWRITE, NULL);
 	if(rc > 0)
 	{
-		printf_s("open database error...");
+		errlog<<"when closing, open database error..."<<endl;
+		//printf_s("open database error...");
 	}
 
 	char* share_mouse = (used == 0 ? shared_mouse_memory1 : shared_mouse_memory2);
@@ -344,7 +383,7 @@ BOOL isNeedScreenCaptured(string window, string strtime)
 		{
 			double interval = GetTimeDifference(toSystemTime(window_map[window]), toSystemTime(strtime));
 			cout<<window<<"#"<<interval<<endl;
-			if(GetTimeDifference(toSystemTime(window_map[window]), toSystemTime(strtime)) > 30)
+			if(interval > 60*3)
 			{
 				window_map[window] = strtime;
 				return TRUE;
@@ -363,13 +402,43 @@ BOOL isNeedScreenCaptured(string window, string strtime)
 	return TRUE;
 }
 
+BOOL isNeedKey(string key)
+{
+	for(int i=0; i<config.keys.size(); i++)
+	{
+		if(key == config.keys[i])
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+BOOL isNeedActionKey(string key)
+{
+	for(int i=0; i<config.actionKeys.size(); i++)
+	{
+		if(key == config.actionKeys[i])
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 LRESULT CALLBACK LLKeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (nCode < 0 || nCode == HC_NOREMOVE)
-		return ::CallNextHookEx(NULL, nCode, wParam, lParam);
-	
-   if (lParam & 0x40000000)	// Check the previous key state
 	{
+		cout<<"ncode<0"<<endl;
+		return ::CallNextHookEx(NULL, nCode, wParam, lParam);
+	}
+
+	if (lParam & 0x40000000)	// Check the previous key state
+	{
+		cout<<"the previous key state"<<endl;
 		return ::CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
@@ -382,8 +451,11 @@ LRESULT CALLBACK LLKeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 		//check that the message is from keyboard or is synthesized by SendInput API
 		if((pkbhs->flags & LLKHF_INJECTED))
+		{
+			cout<<"check that the message is from keyboard or is synthesized by SendInput API"<<endl;
 			return ::CallNextHookEx(NULL, nCode, wParam, lParam);
-		
+		}
+
 		SYSTEMTIME sys;
 		GetLocalTime( &sys );
 		std::string strTime = GetSysLocalTimeStr(sys);
@@ -406,8 +478,36 @@ LRESULT CALLBACK LLKeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		dwMsg += pkbhs->scanCode << 16;
 		dwMsg += pkbhs->flags << 24;
 
+		DWORD vkCode = pkbhs->vkCode;
+
 		CHAR strKey[80];
 		GetKeyNameTextA(dwMsg,strKey,80);
+
+		string skey = string(strKey);
+		vector<string> keylist;
+		//keylist.push_back(skey);
+
+		if(skey == "Ctrl" || skey == "Right Ctrl"  ||
+			skey == "Shift" || skey == "Right Shift" || 
+			skey == "Alt" || skey == "Right Alt" ||
+			skey == "Left Windows" || skey == "Right Windows")
+		{
+			//cout<<skey<<" pressed"<<endl;
+			return CallNextHookEx(NULL, nCode, wParam, lParam);
+		}
+
+		if(GetAsyncKeyState(VK_CONTROL)) keylist.push_back("Ctrl");
+		if(GetAsyncKeyState(VK_SHIFT)) keylist.push_back("Shift");
+		if(GetAsyncKeyState(VK_MENU)) keylist.push_back("Alt");
+		if(GetAsyncKeyState(VK_LWIN) || GetAsyncKeyState(VK_RWIN)) keylist.push_back("Windows");
+
+		keylist.push_back(skey);
+		skey = join(keylist, "+");
+
+		if(config.keyMode == 2 && !isNeedKey(skey))
+		{
+			return CallNextHookEx(NULL, nCode, wParam, lParam);
+		}
 
 		POINT point;
 		GUITHREADINFO pg;
@@ -427,9 +527,24 @@ LRESULT CALLBACK LLKeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		RECT winRect;
 		GetWindowRect(hwnd,&winRect);
 
+		double interval = GetTimeDifference(preKeyTime,sys);	
+		//string sstrKey(strKey);
+		//trim(sstrKey);
+		//cout<<"assert: "<<((sstrKey == "Enter" || sstrKey == "Tab") && interval > 0.5)<<endl;
+		if(isNeedActionKey(skey) && interval > 0.5)
+		{
+			cout<<"key action"<<skey<<endl;
+			ParamData *p = new ParamData;
+			p->pt = point;
+			p->sys = sys;
+
+			HANDLE thread = CreateThread(NULL, 0, AccessUIWhenKeyPressThreadFunction, (LPVOID)p, 0, NULL);  
+			CloseHandle(thread);
+		}
+
 		stringstream ss;
 		ss<<strTime.c_str()<<endl
-			<<strKey<<"#"<<point.x<<" "<<point.y<<endl
+			<<skey.c_str()<<"#"<<point.x<<" "<<point.y<<endl
 			<<windowname.c_str()<<"#"<<winRect.left<<" "<<winRect.top<<" "<<winRect.right<<" "<<winRect.bottom<<endl
 			<<processName.c_str()<<endl
 			<<parentWindowName.c_str()<<endl;
@@ -445,6 +560,7 @@ LRESULT CALLBACK LLKeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 		LeaveCriticalSection(&cs_key);		
 		
+		preKeyTime = sys;
 		/*
 		double interval = GetTimeDifference(preKeyTime,sys);	
 		if(interval<0 || interval > 1)
@@ -572,20 +688,23 @@ LRESULT CALLBACK LLMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		
 		if(interval > 0.5 || preLeftDownWindow != hwnd)
 		{
-			ParamData p;
-			p.pt = point;
-			p.sys = sys;
+			ParamData *p = new ParamData;
+			p->pt = point;
+			p->sys = sys;
+			p->processName = processName;
+			p->windowName = windowName;
+			p->parentWindow = parentWindowName;
+			p->hwnd = hwnd;
 
-			HANDLE thread = CreateThread(NULL, 0, AccessUIThreadFunction, (LPVOID)&p, 0, NULL);  	
-			if(WAIT_TIMEOUT == WaitForSingleObject(thread,500))
-			{
-				errlog<<strTime<<" thread time out\n";
-			}
+			HANDLE thread = CreateThread(NULL, 0, AccessUIThreadFunction, (LPVOID)p, 0, NULL);  	
+			//if(WAIT_TIMEOUT == WaitForSingleObject(thread,500))
+			//{
+			//	errlog<<strTime<<" thread time out\n";
+			//}
 			
 			CloseHandle(thread);
 			
-			if(processName != "explorer.exe" && interval > 1)
-				//isNeedScreenCaptured(windowName, strTime))
+			if(isNeedScreenCaptured(windowName, strTime))
 			{
 				std::string img = "log/screen/" + strTime +  ".png";
 				GetScreeny(SCREEN_RECT,from_string(img).c_str(),100);
@@ -599,7 +718,7 @@ LRESULT CALLBACK LLMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 	else if(wParam == WM_MOUSEWHEEL)
 	{
 		double interval = GetTimeDifference(preMouseWheelTime,sys);
-		if(interval > 1 || preWheelWindow !=  hwnd)
+		if(config.screenCaptureMode != 0 && (interval > 1 || preWheelWindow !=  hwnd))
 		{
 			std::string img = "log/screen/" + strTime +  ".png";
 			GetScreeny(SCREEN_RECT,from_string(img).c_str(),100);
@@ -614,6 +733,148 @@ LRESULT CALLBACK LLMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
+bool WINAPI isNeedUrl(string processName, string windowName, string parentWindow, string strTime)
+{
+	if(!config.isNeedUrl) return false;
+
+	if(browsers.find(processName) != browsers.end())
+	{
+		string appName = browsers[processName];
+		string::size_type idx = windowName.find(" - " + appName);
+
+		if(idx == string::npos)
+		{
+			idx = parentWindow.find(" - " + appName);
+
+			if(idx == string::npos)
+			{
+				return false;
+			}
+			windowName == parentWindow;
+		}
+		
+		if(window_url_map.find(windowName) != window_url_map.end())
+		{
+			double interval = GetTimeDifference(toSystemTime(window_url_map[windowName]), toSystemTime(strTime));
+			if(interval > 10 * 60)
+			{
+				window_url_map[windowName] = strTime;
+				return true;
+			}
+		}
+		else
+		{
+			window_url_map.insert(make_pair(windowName, strTime));
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+vector<string> SearchWebpageUrl(HWND hwnd, string processName)
+{
+	IUIAutomationElement *windowElement;
+    //HRESULT hr = g_pAutomation->ElementFromHandle(static_cast<UIA_HWND>(hwnd) , __out &windowElement);	
+
+	string curWindowName = GetWindowNameStr(hwnd); //if switch to anthor web page, the window name may be different from previous window
+	string curParentWindow =  GetNotNullParentNameStr(hwnd);
+	vector<string> recVec;
+	recVec.push_back(curWindowName);
+	recVec.push_back(curParentWindow);
+
+	string res = "";
+
+	vector<wstring> urlControlNames;
+	if(processName == "firefox.exe")
+	{
+		urlControlNames.push_back(_T("Search or enter address"));
+
+		g_pAutomation->ElementFromHandle(static_cast<UIA_HWND>(hwnd) , __out &windowElement);
+	}
+	else if(processName == "chrome.exe")
+	{
+		urlControlNames.push_back(_T("Address and search bar"));
+		if(curWindowName == "Chrome Legacy Window")
+		{
+			g_pAutomation->ElementFromHandle(static_cast<UIA_HWND>(GetParent(hwnd)) , __out &windowElement);
+		}
+		else
+		{
+			g_pAutomation->ElementFromHandle(static_cast<UIA_HWND>(hwnd) , __out &windowElement);
+		}
+	}
+	else if(processName == "iexplore.exe")
+	{
+		urlControlNames.push_back(_T("Address and search using Bing"));
+		urlControlNames.push_back(_T("Address and search using Google"));
+		urlControlNames.push_back(_T("Address and search using Baidu"));
+		urlControlNames.push_back(_T("Address and search using default-search.net"));
+
+		HWND ieHwnd = FindWindow(_T("IEFrame"), NULL);
+		if(ieHwnd == NULL)
+		{
+			cout<<"ie url empty"<<endl;
+			recVec.push_back("");
+			return recVec;
+		}
+		g_pAutomation->ElementFromHandle(static_cast<UIA_HWND>(ieHwnd) , __out &windowElement);
+
+	}
+	else
+	{
+		printf_s("unsupported browser\n");
+		res = "";
+	}
+
+	for(int i=0; i<urlControlNames.size(); i++)
+	{
+		wstring controlName = urlControlNames[i];
+		IUIAutomationCondition* pNameCondition = NULL;
+		IUIAutomationCondition* pEditCondition = NULL;
+		IUIAutomationCondition* pCombinedCondition = NULL;
+		IUIAutomationElement* pFound = NULL;
+
+		VARIANT varProp;
+		varProp.vt = VT_BSTR;
+		varProp.bstrVal = SysAllocString(controlName.c_str());
+		if (varProp.bstrVal == NULL)
+		{
+			cout<<"url empty"<<endl;
+			recVec.push_back("");
+			return recVec;
+		}
+		
+		HRESULT hr = g_pAutomation->CreatePropertyCondition(UIA_NamePropertyId, varProp, &pNameCondition);
+ 
+		varProp.vt = VT_I4;
+		varProp.lVal = UIA_EditControlTypeId;
+		g_pAutomation->CreatePropertyCondition(UIA_ControlTypePropertyId, varProp, &pEditCondition);
+
+		
+		g_pAutomation->CreateAndCondition(pNameCondition, pEditCondition, &pCombinedCondition);
+
+		hr = windowElement->FindFirst(TreeScope_Descendants, pCombinedCondition, &pFound);
+
+		if(pNameCondition != NULL) pNameCondition->Release();
+		if(pEditCondition != NULL) pEditCondition->Release();
+		if(pCombinedCondition != NULL) pCombinedCondition->Release();
+
+		if(pFound)
+		{
+			res = GetElementValueStr(pFound);
+			pFound->Release();
+			break;
+		}
+	}
+
+	if(windowElement != NULL) windowElement->Release();
+
+	recVec.push_back(res);
+
+	return recVec;
+}
+
 DWORD WINAPI AccessUIThreadFunction( LPVOID lpParam )
 {
 	try
@@ -626,11 +887,22 @@ DWORD WINAPI AccessUIThreadFunction( LPVOID lpParam )
 	SYSTEMTIME sys = data->sys;
 	POINT point = data->pt;
 	string strTime =  GetSysLocalTimeStr(sys); 
+	string processName = data->processName;
+	string windowName = data->windowName;
+	string parentWindow = data->parentWindow;
+	HWND hwnd = data->hwnd;
+
+	trim(processName);
+	trim(windowName);
+	trim(parentWindow);
+	//cout<<processName<<" "<<isBrowser(processName)<<endl;
+
+	delete data;
 
 	IUIAutomationElement* element = NULL;
 
 	hr = g_pAutomation->ElementFromPoint(point, &element);
-
+	
 	if(element == NULL || S_OK != hr)
 	{
 		printf_s("Cann't get Element\n");
@@ -650,6 +922,8 @@ DWORD WINAPI AccessUIThreadFunction( LPVOID lpParam )
 	string pname, ptype;
 	GetElementParentNameWStr(g_pControlWalker,element, pname, ptype);
 
+	ReplaceAll(elementName,"\n","\\n");
+	ReplaceAll(elementName,"\t","\\t");
 	ReplaceAll(elementValue,"\n","\\n");
 	ReplaceAll(elementValue,"\t","\\t");
 
@@ -669,13 +943,31 @@ DWORD WINAPI AccessUIThreadFunction( LPVOID lpParam )
 		<<ptype.c_str()<<endl
 		<<elementValue.c_str()<<endl;
 
+	if(isNeedUrl(processName,windowName, parentWindow, strTime))
+	{
+		vector<string> recVec = SearchWebpageUrl(hwnd, processName);
+		ss<<"URL"<<endl;
+		//ss<<windowName<<endl;
+		ss<<recVec[0].c_str()<<endl;
+		ss<<recVec[1].c_str()<<endl;
+		ss<<recVec[2].c_str()<<endl;
+
+		//cout<<"URL"<<endl;
+		//cout<<recVec[0].c_str()<<endl;
+		//cout<<recVec[1].c_str()<<endl;
+		//cout<<recVec[2].c_str()<<endl;
+		//cout<<"url: "<<SearchWebpageUrl(hwnd, processName, windowName)<<endl;
+	}
+
+	string strdata = ss.str();
+
 	EnterCriticalSection(&cs_click);
 	if(cLen<MAX_LEN)
 	{
 		char* shared = (used == 0 ? shared_click_memory1 : shared_click_memory2);
 
-		memcpy(shared+cLen, ss.str().c_str(), ss.str().length());
-		cLen += ss.str().length();
+		memcpy(shared+cLen, strdata.c_str(),strdata.length());
+		cLen += strdata.length();
 	}
 	LeaveCriticalSection(&cs_click);
 		
@@ -687,6 +979,95 @@ DWORD WINAPI AccessUIThreadFunction( LPVOID lpParam )
 	//SafeArrayDestroy(rumtimeId);
 
 	CoUninitialize();
+	}
+	catch(std::exception &e)
+	{
+		printf_s("exception: %s\n", e.what()); 
+	}
+	return 0; 
+}
+
+DWORD WINAPI AccessUIWhenKeyPressThreadFunction( LPVOID lpParam )
+{
+	try
+    { 
+
+		HRESULT hr;
+		CoInitializeEx(NULL,COINIT_MULTITHREADED);
+
+		PParamData data = (PParamData)lpParam;
+
+		SYSTEMTIME sys = data->sys;
+		POINT point = data->pt;
+		string strTime =  GetSysLocalTimeStr(sys); 
+
+		//cout<<"input enter: "<<strTime<<" "<<point.x<<" "<<point.y<<endl;
+
+		delete data;
+
+		
+		IUIAutomationElement* element = NULL;
+		if(point.x <0 || point.y < 0)
+		{
+			hr = g_pAutomation->GetFocusedElement(&element);
+		}
+		else
+		{
+			hr = g_pAutomation->ElementFromPoint(point, &element);
+		}
+		
+		if(element == NULL || S_OK != hr)
+		{
+			printf_s("Cann't get Element\n");
+		
+			if(element != NULL)
+			{
+				element->Release();
+			}
+			CoUninitialize();
+			return 1;
+		}
+
+		std::string elementDesc = GetElementDescStr(element);
+		std::string elementName = GetElementNameStr(element);
+		std::string elementValue = GetElementValueStr(element);
+
+		string pname, ptype;
+		GetElementParentNameWStr(g_pControlWalker,element, pname, ptype);
+
+		ReplaceAll(elementValue,"\n","\\n");
+		ReplaceAll(elementValue,"\t","\\t");
+
+		RECT bounding;
+		element->get_CurrentBoundingRectangle(&bounding);
+	
+		stringstream ss;
+		ss<<strTime.c_str()<<endl
+			<<elementDesc.c_str()<<endl
+			<<elementName.c_str()<<endl
+			<<bounding.left<<" "<<bounding.top<<" "<<bounding.right<<" "<<bounding.bottom<<endl
+			<<pname.c_str()<<endl
+			<<ptype.c_str()<<endl
+			<<elementValue.c_str()<<endl;
+
+		EnterCriticalSection(&cs_key_access);
+		if(kacessLen<MAX_LEN)
+		{
+			char* shared = (used == 0 ? shared_key_access_memory1 : shared_key_access_memory2);
+
+			memcpy(shared+kacessLen, ss.str().c_str(), ss.str().length());
+			kacessLen += ss.str().length();
+		}
+		LeaveCriticalSection(&cs_key_access);
+		
+		if(element != NULL)
+		{
+			element->Release();
+		}
+
+		//SafeArrayDestroy(rumtimeId);
+
+		CoUninitialize();
 	}
 	catch(std::exception &e)
 	{
@@ -711,11 +1092,13 @@ LRESULT CALLBACK ClipMonitorProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		 }
 		
-		 char* pszText = static_cast<char*>( GlobalLock(hData) );
+		 char* pszText = static_cast<char*>(GlobalLock(hData));
 		 std::string text(pszText);
+		 trim(text);
+
 		 ReplaceAll(text, "\n", "\\n");
 		 ReplaceAll(text, "\t", "\\t");
-
+		 
 		 GlobalUnlock( hData );
 		 CloseClipboard();
 
@@ -749,17 +1132,19 @@ LRESULT CALLBACK ClipMonitorProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam
 			 <<parentWindowName.c_str()<<endl
 			 <<text.c_str()<<endl;
 
+		 string data = ss.str();
+
 		 EnterCriticalSection(&cs_copy);
 		 if(copyLen<MAX_LEN)
 		 {
 			char* shared = (used == 0 ? shared_copy_memory1 : shared_copy_memory2);
-			memcpy(shared+copyLen, ss.str().c_str(), ss.str().length());
-			copyLen += ss.str().length();
+			memcpy(shared+copyLen, data.c_str(), data.length());
+			copyLen += data.length();
 		 }
 		 LeaveCriticalSection(&cs_copy);
 	}
 	
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);;
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 void process_mouse_string(string strMouse)
@@ -973,10 +1358,20 @@ void process_key_string(string strKey)
 void process_click_string(string strClick)
 {
 	sqlite3_stmt* click_stmt;
+	sqlite3_stmt* url_stmt;
 
 	string sqlstr = "insert into tbl_click_action(timestamp, action_name, action_type, action_value, bound_left, bound_top, bound_right, bound_bottom, action_parent_name, action_parent_type)";
 	sqlstr += " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	string sqlstr2 = "insert into tbl_webpage_url(url, window_name, parent_window, timestamp) values(?, ?, ?, ?)";
+
 	if(sqlite3_prepare_v2(db, sqlstr.c_str(), -1, &click_stmt, NULL) != SQLITE_OK)
+	{
+		printf_s("database error\n");
+		return;
+	}
+
+	if(sqlite3_prepare_v2(db, sqlstr2.c_str(), -1, &url_stmt, NULL) != SQLITE_OK)
 	{
 		printf_s("database error\n");
 		return;
@@ -1013,6 +1408,25 @@ void process_click_string(string strClick)
 			string actionParentType = gb2utf8(strList.at(i++));
 			string actionValue = gb2utf8(strList.at(i++));
 
+			if(strList.at(i) == "URL")
+			{
+				i++;
+				//string windowName = gb2utf8(strList.at(i++));
+				string urlWindow = gb2utf8(strList.at(i++));
+				string urlParentWindow = gb2utf8(strList.at(i++));
+				string url = gb2utf8(strList.at(i++));
+
+				//sqlite3_bind_text(url_stmt, 1, windowName.c_str(), windowName.length(), SQLITE_TRANSIENT);
+				sqlite3_bind_text(url_stmt, 1, url.c_str(), url.length(), SQLITE_TRANSIENT);
+				sqlite3_bind_text(url_stmt, 2, urlWindow.c_str(), urlWindow.length(), SQLITE_TRANSIENT);
+				sqlite3_bind_text(url_stmt, 3, urlParentWindow.c_str(), urlParentWindow.length(), SQLITE_TRANSIENT);
+				sqlite3_bind_text(url_stmt, 4, timestamp.c_str(), timestamp.length(), SQLITE_TRANSIENT);
+
+				sqlite3_step(url_stmt);
+				sqlite3_clear_bindings(url_stmt);
+				sqlite3_reset(url_stmt);
+			}
+
 			int index = 1;
 			sqlite3_bind_text(click_stmt, index++, timestamp.c_str(), timestamp.length(), SQLITE_TRANSIENT);
 			sqlite3_bind_text(click_stmt, index++, actionName.c_str(), actionName.length(), SQLITE_TRANSIENT);
@@ -1028,13 +1442,88 @@ void process_click_string(string strClick)
 			sqlite3_step(click_stmt);
 			sqlite3_clear_bindings(click_stmt);
 			sqlite3_reset(click_stmt);
-
 		}
 		catch(const std::exception& e)
 		{
 			if(errlog.is_open())
 			{
 				errlog << "Click Action Format: " << e.what() << '\n';
+				errlog << strClick;
+			}
+		}
+
+	}
+
+	sqlite3_finalize(click_stmt);
+	sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+}
+
+void process_key_access_string(string strClick)
+{
+	sqlite3_stmt* click_stmt;
+	
+	string sqlstr = "insert into tbl_key_action(timestamp, action_name, action_type, action_value, bound_left, bound_top, bound_right, bound_bottom, action_parent_name, action_parent_type)";
+	sqlstr += " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	if(sqlite3_prepare_v2(db, sqlstr.c_str(), -1, &click_stmt, NULL) != SQLITE_OK)
+	{
+		printf_s("process_key_access_string database error\n");
+		return;
+	}
+
+	vector<string> strList = split(strClick, "\n");
+	int i=0;
+	
+	char* sErrMsg = 0;
+	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+	string timestamp;
+	while(i<strList.size())
+	{
+		try
+		{
+			timestamp = strList.at(i++);
+			trim(timestamp);
+			if(timestamp == "")
+			{
+				continue;
+			}
+
+			timestamp = ToTimeFormatInDB(timestamp);
+
+			string actionType = gb2utf8(strList.at(i++));
+			string actionName = gb2utf8(strList.at(i++));
+			string actionBound = strList.at(i++);
+			vector<string> bRect = split(actionBound, " ");
+			RECT bound;
+			bound.left = _StringToNumber<int>(bRect.at(0));
+			bound.top = _StringToNumber<int>(bRect.at(1));
+			bound.right = _StringToNumber<int>(bRect.at(2));
+			bound.bottom = _StringToNumber<int>(bRect.at(3));
+			string actionParentName = gb2utf8(strList.at(i++));
+			string actionParentType = gb2utf8(strList.at(i++));
+			string actionValue = gb2utf8(strList.at(i++));
+
+			int index = 1;
+			sqlite3_bind_text(click_stmt, index++, timestamp.c_str(), timestamp.length(), SQLITE_TRANSIENT);
+			sqlite3_bind_text(click_stmt, index++, actionName.c_str(), actionName.length(), SQLITE_TRANSIENT);
+			sqlite3_bind_text(click_stmt, index++, actionType.c_str(), actionType.length(), SQLITE_TRANSIENT);
+			sqlite3_bind_text(click_stmt, index++, actionValue.c_str(), actionValue.length(), SQLITE_TRANSIENT);
+			sqlite3_bind_int(click_stmt, index++, bound.left);
+			sqlite3_bind_int(click_stmt, index++, bound.top);
+			sqlite3_bind_int(click_stmt, index++, bound.right);
+			sqlite3_bind_int(click_stmt, index++, bound.bottom);
+			sqlite3_bind_text(click_stmt, index++, actionParentName.c_str(), actionParentName.length(), SQLITE_TRANSIENT);
+			sqlite3_bind_text(click_stmt, index++, actionParentType.c_str(), actionParentType.length(), SQLITE_TRANSIENT);
+
+			sqlite3_step(click_stmt);
+			sqlite3_clear_bindings(click_stmt);
+			sqlite3_reset(click_stmt);
+		}
+		catch(const std::exception& e)
+		{
+			if(errlog.is_open())
+			{
+				errlog << "Key Action Error: " << e.what() << '\n';
 				errlog << strClick;
 			}
 		}
@@ -1063,11 +1552,13 @@ void process_copy_string(string strCopy)
 		try
 		{
 			timestamp = strList.at(i++);
-			//trim(timestamp);
+			trim(timestamp);
 			if(timestamp == "")
 			{
 				continue;
 			}
+
+			timestamp = ToTimeFormatInDB(timestamp);
 
 			//cout<<"copy: "<<timestamp<<endl;
 
@@ -1076,7 +1567,7 @@ void process_copy_string(string strCopy)
 			string parentWindow = gb2utf8(strList.at(i++));
 			string text = gb2utf8(strList.at(i++));
 
-			errlog<<"Copy log: "<<timestamp<<"#"<<windowName<<endl;
+			//errlog<<"Copy log: "<<timestamp<<"#"<<windowName<<endl;
 
 			int index = 1;
 			sqlite3_bind_text(copy_stmt, index++, timestamp.c_str(), timestamp.length(), SQLITE_TRANSIENT);
@@ -1091,7 +1582,8 @@ void process_copy_string(string strCopy)
 		}
 		catch(const std::exception& e)
 		{
-			errlog << "Copy Data Error: " << e.what()<< strCopy << '\n';
+			errlog << "Copy Data Error: " << e.what()<<endl
+				<< strCopy << endl;
 		}
 	}
 	sqlite3_finalize(copy_stmt);
@@ -1104,6 +1596,7 @@ DWORD WINAPI WriteToDiskThreadFunction( LPVOID lpParam )
 	int kLenTemp = 0;
 	int cLenTemp = 0;
 	int copyLenTemp = 0;
+	int kacessLenTemp = 0;
 
 	while(TRUE)
 	{
@@ -1112,7 +1605,10 @@ DWORD WINAPI WriteToDiskThreadFunction( LPVOID lpParam )
 		EnterCriticalSection(&cs_mouse);
 		EnterCriticalSection(&cs_click);
 		if(config.keyMode == 1)
+		{
 			EnterCriticalSection(&cs_key);
+			EnterCriticalSection(&cs_key_access);
+		}
 		if(config.copyMode == 1)
 			EnterCriticalSection(&cs_copy);
 
@@ -1120,22 +1616,28 @@ DWORD WINAPI WriteToDiskThreadFunction( LPVOID lpParam )
 		cLenTemp = cLen;
 		kLenTemp = kLen;
 		copyLenTemp = copyLen;
-			
+		kacessLenTemp = kacessLen;
+
 		used = 1- used;
 		mLen = 0;
 		cLen = 0;
 		kLen = 0;
 		copyLen = 0;
+		kacessLen = 0;
 
 		char* share_mouse = (used == 1 ? shared_mouse_memory1 : shared_mouse_memory2);
 		char* share_click = (used == 1 ? shared_click_memory1 : shared_click_memory2);
 		char* share_key = (used == 1 ? shared_key_memory1 : shared_key_memory2);
 		char* share_copy = (used == 1 ? shared_copy_memory1 : shared_copy_memory2);
+		char* share_key_access = (used == 1 ? shared_key_access_memory1 : shared_key_access_memory2);
 
 		LeaveCriticalSection(&cs_mouse);
 		LeaveCriticalSection(&cs_click);
 		if(config.keyMode == 1)
+		{
 			LeaveCriticalSection(&cs_key);
+			LeaveCriticalSection(&cs_key_access);
+		}
 		if(config.copyMode == 1)
 			LeaveCriticalSection(&cs_copy);
 
@@ -1165,9 +1667,16 @@ DWORD WINAPI WriteToDiskThreadFunction( LPVOID lpParam )
 		
 		if(copyLenTemp > 0)
 		{
-			string strCopy(share_copy, share_copy+cLenTemp);
+			string strCopy(share_copy, share_copy+copyLenTemp);
 			process_copy_string(strCopy);
 			cout<<copyLenTemp<<" ";
+		}
+
+		if(kacessLenTemp > 0)
+		{
+			string strKeyAccess(share_key_access, share_key_access+kacessLenTemp);
+			process_key_access_string(strKeyAccess);
+			cout<<kacessLenTemp<<" ";
 		}
 
 		cout<<endl;
