@@ -90,6 +90,8 @@ T __declspec(dllexport) _StringToNumber(const string& numberAsString)
 }
 
 void  trim(std::string& str);
+std::string trim_space(std::string& str);
+
 vector<string> split(string& str, string delim);
 string  join(vector<string> sarray, string sep);
 void  ReplaceAll(std::string& str, const std::string from,const std::string to);

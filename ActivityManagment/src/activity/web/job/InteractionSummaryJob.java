@@ -30,11 +30,11 @@ public class InteractionSummaryJob implements StatefulJob{
     	//Thread.sleep(1000 * 10);
     	
     	logger.info("summary background job begin....");
-    	InteractionSummaryProcesser isp = new InteractionSummaryProcesser();
-    	isp.process();
+    	//InteractionSummaryProcesser isp = new InteractionSummaryProcesser();
+    	//isp.process();
     	
-    	ActionMatcher am = new ActionMatcher();
-    	am.process();
+    	//ActionMatcher am = new ActionMatcher();
+    	//am.process();
 //    	
     } catch (Exception ex) {
     	ex.printStackTrace();

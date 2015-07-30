@@ -228,7 +228,7 @@ std::string WINAPI GetNotNullParentNameStr(HWND hwnd)
 	{
 		std::string name = GetWindowNameStr(parent);
 		trim(name);
-		if(name == "")
+		if(name == "" || int(name[0]) == 0)
 		{
 			return GetNotNullParentNameStr(parent);
 		}
@@ -296,7 +296,12 @@ string to_utf8(const wchar_t* buffer, int len)
 
 std::string to_utf8(const std::wstring& str)
 {
-       return to_utf8(str.c_str(), (int)str.size());
+	if(str.empty())
+	{
+		return "";
+	}
+
+    return to_utf8(str.c_str(), (int)str.size());
 }
 
 /*
@@ -463,10 +468,16 @@ void WINAPI GetElementParentNameWStr(IUIAutomationTreeWalker* walker, IUIAutomat
 	{
 		pname = GetElementNameStr(parent);
 		ptype = GetElementDescStr(parent);
+		//cout<<pname[0]<<"/"<<int(pname[0])<<"/ size: "<<pname.size()<<endl;
 		trim(pname);
+		//cout<<pname[0]<<"/"<<int(pname[0])<<"/ size: "<<pname.size()<<endl;
+		//cout<<(pname.compare(" ") == 0)<<" "<<pname.length()<<" / "<<ptype<<endl;
+		//pname = trim_space(pname);
 		//printf_s("Parent %s %s %d\n", ptype.c_str(), "´°¸ñ",ptype == to_utf8(_T("´°¸ñ")));
-		if(pname == "" || !isWantedControl(ptype))
+		//cout<<(pname.compare("") == 0)<<" "<<pname.length()<<" / "<<ptype<<endl;
+		if(pname.length()==0 || int(pname[0]) == 0 || !isWantedControl(ptype))
 		{
+			
 			return GetElementParentNameWStr(walker, parent, pname, ptype);
 		}
 		else
@@ -665,11 +676,16 @@ int GetScreeny(RECT r,LPCWSTR  lpszFilename, ULONG uQuality) // by Napalm
 
 void trim(std::string& str)
 {
- 	string::size_type pos = str.find_last_not_of(" \f\n\r\t\v");
+	if (str.empty())   
+    {  
+        return;  
+    }  
+
+ 	string::size_type pos = str.find_last_not_of(" \f\n\r\t\v\0");
 	if(pos != string::npos) 
 	{
 		str.erase(pos + 1);
-		pos = str.find_first_not_of(" \f\n\r\t\v");
+		pos = str.find_first_not_of(" \f\n\r\t\v\0");
 		if(pos != string::npos) 
 		{
 			str.erase(0, pos);
@@ -679,6 +695,14 @@ void trim(std::string& str)
 	{
 		str.erase(str.begin(), str.end());
 	}
+}
+
+string trim_space(string& str)
+{
+    size_t first = str.find_first_not_of(' ');
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last-first+1));
+
 }
 
 vector<string> split(string& str, string delim)

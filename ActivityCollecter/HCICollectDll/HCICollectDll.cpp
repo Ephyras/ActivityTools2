@@ -382,7 +382,7 @@ BOOL isNeedScreenCaptured(string window, string strtime)
 		if(window_map.find(window) != window_map.end())
 		{
 			double interval = GetTimeDifference(toSystemTime(window_map[window]), toSystemTime(strtime));
-			cout<<window<<"#"<<interval<<endl;
+			//cout<<window<<"#"<<interval<<endl;
 			if(interval > 60*3)
 			{
 				window_map[window] = strtime;
@@ -607,6 +607,8 @@ LRESULT CALLBACK LLMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 	std::string parentWindowName = GetNotNullParentNameStr(hwnd);
 	ReplaceAll(parentWindowName,"\n","\\n");
 	ReplaceAll(parentWindowName,"\t","\\t");
+
+	trim(processName);
 
 	SYSTEMTIME sys;
 	GetLocalTime( &sys );

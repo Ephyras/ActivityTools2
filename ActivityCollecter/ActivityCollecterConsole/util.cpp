@@ -1,3 +1,4 @@
+#include<Windows.h>
 #include"util.h"
 
 
@@ -77,6 +78,7 @@ std::string wstr2str(const wchar_t* buffer, int len)
 	}
   
 	int nLen = ::WideCharToMultiByte(CP_ACP, 0, buffer, -1, NULL, 0, NULL, NULL);  
+	cout<<"nLen "<<nLen<<endl;
 	if (nLen == 0)   
 	{  
 		return "";  
@@ -86,11 +88,17 @@ std::string wstr2str(const wchar_t* buffer, int len)
 		newbuffer.resize(nLen) ;
 	::WideCharToMultiByte(CP_ACP, 0, buffer, -1, const_cast< char* >(newbuffer.c_str()), nLen, NULL, NULL);  
 
+	//newbuffer[nLen] = '\0';
+
     return newbuffer;
 }
 
 std::string wstr2str(wstring wstr)
 {
+	if(wstr.empty())
+	{
+		return "";
+	}
 	return wstr2str(wstr.c_str(), wstr.length());
 }
 
@@ -114,4 +122,18 @@ string getSysLocalTimeStr()
 		sys.wHour, sys.wMinute,sys.wSecond, sys.wMilliseconds);
 
 	return std::string(timestr);
+}
+
+int main_0()
+{ 
+	string s = wstr2str(_T(" "));
+	cout<<s<<endl;
+	cout<<s.length()<<endl;
+
+	trim(s);
+	cout<<s.length()<<endl;
+
+	bool flag = (s == "");
+
+	return 0;
 }
